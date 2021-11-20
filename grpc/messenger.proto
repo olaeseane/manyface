@@ -1,0 +1,34 @@
+// protoc --go_out=. --go-grpc_out=. messenger.proto
+
+syntax = "proto3";
+
+option go_package = "manyface.net/grpc";
+
+package grpc;
+
+service Messenger {
+    rpc Send(SendRequest) returns (SendResponse) {};
+    rpc Listen(ListenRequest) returns (stream ListenResponse) {};
+}
+
+message SendRequest {
+    string message = 1;
+    string sender_face_id = 2;
+    string receiver_face_id = 3;
+}
+
+message SendResponse {
+    bool result = 1;
+}
+
+message ListenRequest {
+    string sender_face_id = 1;
+    string receiver_face_id = 2;
+}
+
+message ListenResponse {
+    string content = 1;
+    string sender_face_id = 2;
+    string receiver_face_id = 3;
+    int64 timestamp = 4;
+}
