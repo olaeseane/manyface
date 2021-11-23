@@ -7,28 +7,30 @@ option go_package = "manyface.net/grpc";
 package grpc;
 
 service Messenger {
-    rpc Send(SendRequest) returns (SendResponse) {};
-    rpc Listen(ListenRequest) returns (stream ListenResponse) {};
+  rpc Send(SendRequest) returns(SendResponse){};
+  rpc Listen(ListenRequest) returns(stream ListenResponse){};
 }
 
 message SendRequest {
-    string message = 1;
-    string sender_face_id = 2;
-    string receiver_face_id = 3;
+  string message = 1;
+  int64 connection_id = 2;
+  string sender_face_id = 3;
+  string receiver_face_id = 4;
 }
 
-message SendResponse {
-    bool result = 1;
-}
+message SendResponse { bool result = 1; }
 
 message ListenRequest {
-    string sender_face_id = 1;
-    string receiver_face_id = 2;
+  int64 connection_id = 1;
+  string sender_face_id = 2;
+  string receiver_face_id = 3;
 }
 
 message ListenResponse {
-    string content = 1;
-    string sender_face_id = 2;
-    string receiver_face_id = 3;
-    int64 timestamp = 4;
+  string content = 1;
+  int64 connection_id = 2;
+  string sender = 3;
+  string sender_face_id = 4;
+  string receiver_face_id = 5;
+  int64 timestamp = 6;
 }
