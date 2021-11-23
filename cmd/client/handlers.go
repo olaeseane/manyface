@@ -2,18 +2,23 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gosuri/uitable"
 	"manyface.net/internal/messenger"
+
+	pb "manyface.net/grpc"
 )
 
 func ListFaces() {
-	req, err := http.NewRequest(urls["GetFaces"][0], *s+urls["GetFaces"][1], nil)
+	req, err := http.NewRequest(urls["GetFaces"][0], *ws+urls["GetFaces"][1], nil)
 	req.Header.Add("session-id", loginResp.SessID)
 	if err != nil {
 		panic(err)
@@ -38,11 +43,7 @@ func ListFaces() {
 	// table.Wrap = true
 	table.AddRow("#", "ID", "Name", "Description")
 	for i, f := range faces {
-		table.AddRow(strconv.Itoa(i+1), cyan(f.ID), cyan(f.Name), cyan(f.Description))
-		// table.AddRow("ID:", cyan(f.ID))
-		// table.AddRow("Name:", cyan(f.Name))
-		// table.AddRow("Description:", cyan(f.Description))
-		// table.AddRow("") // blank
+		table.AddRow(strconv.Itoa(i+1), yellow(f.ID), cyan(f.Name), f.Description)
 	}
 	fmt.Println("---")
 	fmt.Println(table)
@@ -52,7 +53,7 @@ func ListFaces() {
 func NewFace(name, descr string) {
 	reqBody := []byte(fmt.Sprintf(`{"name": "%s","description": "%s"}`, name, descr))
 
-	req, err := http.NewRequest(urls["CreateFace"][0], *s+urls["CreateFace"][1], bytes.NewBuffer(reqBody))
+	req, err := http.NewRequest(urls["CreateFace"][0], *ws+urls["CreateFace"][1], bytes.NewBuffer(reqBody))
 	req.Header.Add("session-id", loginResp.SessID)
 	if err != nil {
 		panic(err)
@@ -65,89 +66,148 @@ func NewFace(name, descr string) {
 	if resp.StatusCode != http.StatusOK {
 		fmt.Println(red("The face wasn't created, status code "), red(strconv.Itoa(resp.StatusCode)))
 	} else {
-		fmt.Println(green("New face was created"))
+		fmt.Println(green("The new face was created"))
 	}
 	fmt.Println("---")
 }
 
-/*
-func CreateConn(faceID, matrixPeerUserID string) {
-	var faceName, matrixUserID, matrixPassword, matrixAccessToken, matrixRoomID string
+func CreateConn(faceID, peerFaceID string) {
+	reqBody := []byte(fmt.Sprintf(`{"face_user_id": "%s","face_peer_id": "%s"}`, faceID, peerFaceID))
 
-	err := db.QueryRow("SELECT name FROM face WHERE face_id = ?", faceID).Scan(&faceName)
-	if err != nil {
-		fmt.Println(red("Wrong face id"))
-		return
-	}
-	matrixUserID = RandStringRunes(10)
-	matrixPassword = RandStringRunes(10)
-
-	res1, err := client.RegisterDummy(&mautrix.ReqRegister{
-		Username: matrixUserID,
-		Password: matrixPassword,
-	})
+	req, err := http.NewRequest(urls["CreateConn"][0], *ws+urls["CreateConn"][1], bytes.NewBuffer(reqBody))
+	req.Header.Add("session-id", loginResp.SessID)
 	if err != nil {
 		panic(err)
 	}
-	client.SetCredentials(res1.UserID, res1.AccessToken)
-	matrixAccessToken = res1.AccessToken
-	matrixUserID = res1.UserID.String()
-
-	res2, err := client.CreateRoom(
-		&mautrix.ReqCreateRoom{
-			Visibility: "private",
-			// RoomAliasName: "RoomAliasName",
-			Name:     faceName,
-			Invite:   []id.UserID{id.UserID(matrixPeerUserID)},
-			Preset:   "trusted_private_chat",
-			IsDirect: true,
-		})
+	resp, err := httpCli.Do(req)
 	if err != nil {
 		panic(err)
 	}
-	matrixRoomID = string(res2.RoomID)
-
-	res3, err := db.Exec("INSERT INTO connection (username, password, room_id, peer_id, access_token, face_id) VALUES (?, ?, ?, ?, ?, ?)",
-		matrixUserID, matrixPassword, matrixRoomID, matrixPeerUserID, matrixAccessToken, faceID)
-	if err != nil {
-		panic(err)
+	fmt.Println("---")
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println(red("The connection wasn't created, status code "), red(strconv.Itoa(resp.StatusCode)))
+	} else {
+		fmt.Println(green("The new connection was created"))
 	}
-	rowCnt, err := res3.RowsAffected()
-	if rowCnt != 1 || err != nil {
-		fmt.Println(red("Error created new connection"))
-		return
-	}
-
-	client.Logout()
-	client.ClearCredentials()
-	fmt.Printf("Created connection with user %s for face %s\n", matrixPeerUserID, faceName)
+	fmt.Println("---")
 }
 
-func SendMessage(faceID, matrixPeerUserID, message string) {
-	var matrixUserID, matrixPassword, matrixAccessToken, matrixRoomID string
-
-	err := db.
-		QueryRow("SELECT username, access_token, room_id, password FROM connection WHERE face_id = ? AND peer_id = ?", faceID, matrixPeerUserID).
-		Scan(&matrixUserID, &matrixAccessToken, &matrixRoomID, &matrixPassword)
+func ListConns() {
+	req, err := http.NewRequest(urls["GetConns"][0], *ws+urls["GetConns"][1], nil)
+	req.Header.Add("session-id", loginResp.SessID)
+	if err != nil {
+		panic(err)
+	}
+	resp, err := httpCli.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		panic(err)
 	}
 
-	_, err = client.Login(&mautrix.ReqLogin{
-		Type:             "m.login.password",
-		Identifier:       mautrix.UserIdentifier{Type: mautrix.IdentifierTypeUser, User: matrixUserID},
-		Password:         matrixPassword,
-		StoreCredentials: true,
-	})
-	if err != nil {
-		panic(err)
-	}
-	_, err = client.SendText(id.RoomID(matrixRoomID), message)
+	conns := []messenger.Conn{}
+	err = json.Unmarshal(respBody, &conns)
 	if err != nil {
 		panic(err)
 	}
 
-	client.Logout()
-	client.ClearCredentials()
+	table := uitable.New()
+	table.MaxColWidth = 80
+	// table.Wrap = true
+	table.AddRow("ID", "My Face", "Face Peer")
+	for _, c := range conns {
+		faceUser, _ := getFace(c.FaceUserID)
+		facePeer, _ := getFace(c.FacePeerID)
+		table.AddRow(cyan(strconv.Itoa(int(c.ID))), cyan(faceUser.Name)+" ("+yellow(c.FaceUserID)+")", cyan(facePeer.Name)+" ("+yellow(c.FacePeerID)+")")
+	}
+	fmt.Println("---")
+	fmt.Println(table)
+	fmt.Println("---")
 }
-*/
+
+func SendMsg(connID int64, message string) {
+	request := &pb.SendRequest{
+		Message:      message,
+		ConnectionId: connID,
+	}
+	response, err := grpcCli.Send(context.Background(), request)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(response.Result)
+}
+
+func ListenMsg() {
+	req, err := http.NewRequest(urls["GetConns"][0], *ws+urls["GetConns"][1], nil)
+	req.Header.Add("session-id", loginResp.SessID)
+	if err != nil {
+		panic(err)
+	}
+	resp, err := httpCli.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	conns := []messenger.Conn{}
+	err = json.Unmarshal(respBody, &conns)
+	if err != nil {
+		panic(err)
+	}
+
+	// fmt.Println(conns)
+	for _, c := range conns {
+		go func(c messenger.Conn) {
+			request := pb.ListenRequest{
+				ConnectionId: c.ID,
+			}
+			// fmt.Printf("%+v\n", request)
+			stream, err := grpcCli.Listen(context.Background(), &request)
+			if err != nil {
+				// fmt.Println(err)
+				panic(err)
+			}
+			for {
+				// fmt.Println("starting listening...")
+				msg, err := stream.Recv()
+				// fmt.Println(msg)
+				if err == io.EOF {
+					break
+				}
+				if err != nil {
+					panic(err)
+				}
+				table := uitable.New()
+				table.MaxColWidth = 80
+				table.AddRow("From (Face)", "From (ID)", "Message", "Time")
+				f, _ := getFace(msg.Sender)
+				table.AddRow(cyan(f.Name), yellow(msg.Sender), green(msg.Content), time.Unix(msg.Timestamp, 0))
+				fmt.Println(table)
+			}
+		}(c)
+	}
+}
+
+func getFace(faceID string) (*messenger.Face, error) {
+	req, err := http.NewRequest(urls["GetFace"][0], *ws+urls["GetFace"][1]+faceID, nil)
+	req.Header.Add("session-id", loginResp.SessID)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := httpCli.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var f messenger.Face
+	json.Unmarshal(respBody, &f)
+	return &f, nil
+}
