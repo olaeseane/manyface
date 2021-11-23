@@ -41,10 +41,10 @@ func (srv *MsgServer) Send(ctx context.Context, req *pb.SendRequest) (*pb.SendRe
 	// TODO: make auth
 	c := &Conn{}
 	err := srv.db.
-		QueryRow("SELECT conn_id, mtrx_user_id, mtrx_password, mtrx_access_token, mtrx_room_id, mtrx_peer_id, face_id, face_peer_id FROM connection WHERE face_id = ? AND face_peer_id = ?", req.SenderFaceId, req.ReceiverFaceId).
+		QueryRow("SELECT conn_id, mtrx_user_id, mtrx_password, mtrx_access_token, mtrx_room_id, mtrx_peer_id, face_id, face_peer_id FROM connection WHERE conn_id = ?", req.ConnectionId).
 		Scan(&c.ID, &c.MtrxUserID, &c.MtrxPassword, &c.MtrxAccessToken, &c.MtrxRoomID, &c.MtrxPeerID, &c.FaceUserID, &c.FacePeerID)
 	if err != nil {
-		m := fmt.Sprintf("Can't select connection for faces %v and %v - %v\n", req.SenderFaceId, req.ReceiverFaceId, err)
+		m := fmt.Sprintf("Can't select connection number %d - %s\n", req.ConnectionId, err)
 		srv.logger.Error(m)
 		return &pb.SendResponse{Result: false}, errors.New(m)
 	}
@@ -61,10 +61,10 @@ func (srv *MsgServer) Send(ctx context.Context, req *pb.SendRequest) (*pb.SendRe
 
 	_, err = srv.conns[c.MtrxUserID].cli.SendText(id.RoomID(c.MtrxRoomID), req.Message)
 	if err != nil {
-		srv.logger.Errorf("Can't send message to %v from %v", req.ReceiverFaceId, req.SenderFaceId)
+		srv.logger.Errorf("Can't send message to %v from %v", c.FacePeerID, c.FaceUserID)
 		return &pb.SendResponse{Result: false}, errors.New("send message error")
 	}
-	srv.logger.Infof("Message was sent to %v from %v", req.ReceiverFaceId, req.SenderFaceId)
+	srv.logger.Infof("Message was sent to %v from %v", c.FacePeerID, c.FaceUserID)
 	return &pb.SendResponse{Result: true}, nil
 }
 
@@ -72,33 +72,36 @@ func (srv *MsgServer) Listen(req *pb.ListenRequest, stream pb.Messenger_ListenSe
 	// TODO: make auth
 	c := &Conn{}
 	err := srv.db.
-		QueryRow("SELECT conn_id, mtrx_user_id, mtrx_password, mtrx_access_token, mtrx_room_id, mtrx_peer_id, face_id, face_peer_id FROM connection WHERE face_id = ? AND face_peer_id = ?", req.SenderFaceId, req.ReceiverFaceId).
+		QueryRow("SELECT conn_id, mtrx_user_id, mtrx_password, mtrx_access_token, mtrx_room_id, mtrx_peer_id, face_id, face_peer_id FROM connection WHERE conn_id = ?", req.ConnectionId).
 		Scan(&c.ID, &c.MtrxUserID, &c.MtrxPassword, &c.MtrxAccessToken, &c.MtrxRoomID, &c.MtrxPeerID, &c.FaceUserID, &c.FacePeerID)
 	if err != nil {
-		m := fmt.Sprintf("Can't select connection for faces %v and %v - %v\n", req.SenderFaceId, req.ReceiverFaceId, err)
+		m := fmt.Sprintf("Can't select connection number %d - %s\n", req.ConnectionId, err)
 		srv.logger.Error(m)
 		return errors.New(m)
 	}
 
-	if _, ok := srv.conns[c.MtrxUserID]; !ok {
-		c.cli, err = joinMtrxClient(c)
-		if err != nil {
-			return err
-		}
-		c.ch = make(chan EventMessage)
-		srv.conns[c.MtrxUserID] = c
-		go startMtrxSyncer(srv.wg, c, srv.logger)
+	c.cli, err = joinMtrxClient(c)
+	if err != nil {
+		return err
 	}
+	c.ch = make(chan EventMessage)
+	srv.conns[c.MtrxUserID] = c
+	go startMtrxSyncer(srv.wg, c, srv.logger)
 
 	for evt := range srv.conns[c.MtrxUserID].ch {
+		var senderFaceID string
+		srv.db.QueryRow("SELECT face_id FROM connection WHERE mtrx_user_id = ?", evt.sender).Scan(&senderFaceID)
 		resp := pb.ListenResponse{
-			Content:        evt.content,
-			Timestamp:      evt.timestamp,
-			SenderFaceId:   evt.sender,
-			ReceiverFaceId: "",
+			Content:   evt.content,
+			Timestamp: evt.timestamp,
+			Sender:    senderFaceID,
 		}
 		if err := stream.Send(&resp); err != nil {
+			fmt.Println(err)
+			delete(srv.conns, c.MtrxUserID) // TODO: have to close channel, mtrx syncer as well and check memory leaking
 			return err
+		} else {
+			fmt.Printf("stream.Send - \"%s\" from %s (%s) to %s (%s)\n", green(resp.Content), cyan(senderFaceID), evt.sender, cyan(c.FaceUserID), c.MtrxUserID)
 		}
 	}
 	return nil
@@ -128,12 +131,12 @@ func (srv *MsgServer) GetFaceByID(faceID string) (*Face, error) {
 }
 
 func (srv *MsgServer) GetFacesByUser(userID int64) ([]*Face, error) {
-	faces := make([]*Face, 0, 5)
 	rows, err := srv.db.Query("SELECT face_id, name, description, user_id FROM face WHERE user_id = ?", userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
+	faces := make([]*Face, 0, 5)
 	for rows.Next() {
 		f := &Face{}
 		if err := rows.Scan(&f.ID, &f.Name, &f.Description, &f.UserID); err != nil {
@@ -164,15 +167,22 @@ func (srv *MsgServer) DelFaceByID(faceID string, userID int64) error {
 }
 
 func (srv *MsgServer) CreateConn(userID int64, faceUserID, facePeerID string) ([]*Conn, error) {
-	// TODO: can't create new connection if there is already one for these faces?
 	var faceUserName, facePeerName string
 
 	// check if faces are corrrected
-	if err := srv.db.QueryRow("SELECT name FROM face WHERE face_id = ? AND user_id = ?", faceUserID, userID).Scan(&faceUserName); err == sql.ErrNoRows || err != nil {
+	if err := srv.db.QueryRow("SELECT name FROM face WHERE face_id = ? AND user_id = ?",
+		faceUserID, userID).Scan(&faceUserName); err == sql.ErrNoRows || err != nil {
 		return nil, err
 	}
 	if err := srv.db.QueryRow("SELECT name FROM face WHERE face_id = ?", facePeerID).Scan(&facePeerName); err == sql.ErrNoRows || err != nil {
 		return nil, err
+	}
+
+	// can only create one connection for pair faceID-peerID
+	var cID int64
+	if err := srv.db.QueryRow("SELECT conn_id FROM connection WHERE face_id = ? AND face_peer_id = ?",
+		faceUserID, facePeerID).Scan(&cID); err == nil || err != sql.ErrNoRows {
+		return nil, errors.New("only one connection for pair of faces")
 	}
 
 	// TODO: create once in MsgServer for performance reason?
@@ -203,9 +213,10 @@ func (srv *MsgServer) CreateConn(userID int64, faceUserID, facePeerID string) ([
 		&mautrix.ReqCreateRoom{
 			Visibility: "private",
 			// RoomAliasName: faceUserName + "-" + facePeerName,
-			Name:     faceUserName + "-" + facePeerName,
-			Invite:   []id.UserID{resPeer.UserID},
-			Preset:   "trusted_private_chat",
+			Name:   faceUserName + "<->" + facePeerName,
+			Invite: []id.UserID{resPeer.UserID},
+			// Preset:   "trusted_private_chat",
+			Preset:   "private_chat",
 			IsDirect: true,
 		})
 	if err != nil {
@@ -307,33 +318,25 @@ func (srv *MsgServer) DeleteConn(userID int64, faceUserID, facePeerID string) er
 	return nil
 }
 
-/*
-func (srv *MsgServer) StartSyncers() {
-	rows, err := srv.db.Query("SELECT conn_id, mtrx_user_id, mtrx_password, mtrx_access_token, mtrx_room_id, mtrx_peer_id, face_id, face_peer_id FROM connection")
+func (srv *MsgServer) GetConnsByUser(userID int64) ([]*Conn, error) {
+	rows, err := srv.db.Query("SELECT c.conn_id, c.face_id, c.face_peer_id FROM connection c LEFT JOIN face f ON c.face_id=f.face_id WHERE user_id=?", userID)
 	if err != nil {
-		srv.logger.Fatal("Can't read connections - ", err)
+		return nil, err
 	}
-	// var conns []*Conn
+	defer rows.Close()
+	conns := make([]*Conn, 0, 5)
 	for rows.Next() {
 		c := &Conn{}
-		if err := rows.Scan(&c.ID, &c.MtrxUserID, &c.MtrxPassword, &c.MtrxAccessToken, &c.MtrxRoomID, &c.MtrxPeerID, &c.FaceUserID, &c.FacePeerID); err != nil {
-			srv.logger.Errorf("Can't scan attributes of connection %v", c.ID)
-			continue
+		if err := rows.Scan(&c.ID, &c.FaceUserID, &c.FacePeerID); err != nil {
+			return nil, err
 		}
-		srv.conns[c.MtrxUserID] = c
-		// conns = append(conns, c)
+		conns = append(conns, c)
 	}
 	if err := rows.Err(); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	rows.Close()
-	for _, c := range srv.conns {
-		srv.wg.Add(1)
-		go startConnSync(srv.wg, c, srv.logger) // TODO: maybe use channel somehow?
-	}
-	srv.wg.Wait()
+	return conns, nil
 }
-*/
 
 func joinMtrxClient(c *Conn) (*mautrix.Client, error) {
 	cli, err := mautrix.NewClient("http://localhost:8008", "", "") // TODO: change to config env
@@ -362,7 +365,7 @@ func startMtrxSyncer(wg *sync.WaitGroup, c *Conn, logger *zap.SugaredLogger) {
 	}()
 	syncer := c.cli.Syncer.(*mautrix.DefaultSyncer)
 	syncer.OnEventType(event.EventMessage, func(source mautrix.EventSource, evt *event.Event) {
-		fmt.Printf("<%s> %s (%s/%s) - %s - %s\n", cyan(string(evt.Sender)), green(evt.Content.AsMessage().Body), evt.Type.String(), evt.ID, evt.RoomID, evt.ToDeviceID)
+		// fmt.Printf("<%s> %s (%s/%s) - %s - %s\n", cyan(string(evt.Sender)), green(evt.Content.AsMessage().Body), evt.Type.String(), evt.ID, evt.RoomID, evt.ToDeviceID)
 		select {
 		case c.ch <- EventMessage{
 			sender:    string(evt.Sender),
