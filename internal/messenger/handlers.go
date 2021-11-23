@@ -142,3 +142,21 @@ func (h *MessengerHandler) DeleteConn(w http.ResponseWriter, r *http.Request, _ 
 	w.WriteHeader(http.StatusNoContent)
 	h.Logger.Infof("The connections were deleted")
 }
+
+// GET /api/conns
+func (h *MessengerHandler) GetConns(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	sess, _ := h.SM.GetFromCtx(r.Context())
+
+	u := sess.UserID
+	conns, err := h.Srv.GetConnsByUser(u)
+	if err != nil {
+		common.HandleError(w, err, http.StatusInternalServerError, "Can't get connections for user "+strconv.Itoa(int(u)), h.Logger)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	b, _ := json.Marshal(conns)
+	w.Write(b)
+
+	h.Logger.Infof("Got the connections for user %v ", u)
+}

@@ -90,7 +90,7 @@ func main() {
 	router.GET("/api/faces", messengerHandler.GetFaces)
 	router.POST("/api/conn", messengerHandler.CreateConn)
 	router.DELETE("/api/conn", messengerHandler.DeleteConn)
-	// router.POST("/api/conns", messengerHandler.GetConns)
+	router.GET("/api/conns", messengerHandler.GetConns)
 	mux := middleware.Auth(logger, sm, router)
 
 	// Start web server
