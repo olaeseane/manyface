@@ -8,3 +8,6 @@ Todo:
   ☐ Use ORM?
   ☐ Make good error message (e.g. in func (srv *MsgServer) Send)
   ☐ Gracefull shutdown (Signal.interrupt)
+  ☐ API path refactoring (https://stepik.org/lesson/314473)
+  ☐ Change to https rest api
+  ☐ Use ssl for grpc call
