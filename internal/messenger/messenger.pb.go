@@ -6,7 +6,7 @@
 // 	protoc        v3.17.3
 // source: messenger.proto
 
-package grpc
+package messenger
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
