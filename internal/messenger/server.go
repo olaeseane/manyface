@@ -11,9 +11,8 @@ import (
 
 	"github.com/ttacon/chalk"
 	"go.uber.org/zap"
+	"manyface.net/internal/utils"
 
-	pb "manyface.net/grpc"
-	"manyface.net/internal/common"
 	"maunium.net/go/mautrix"
 	"maunium.net/go/mautrix/event"
 	"maunium.net/go/mautrix/id"
@@ -37,7 +36,7 @@ func NewServer(db *sql.DB, logger *zap.SugaredLogger) *MsgServer {
 	}
 }
 
-func (srv *MsgServer) Send(ctx context.Context, req *pb.SendRequest) (*pb.SendResponse, error) {
+func (srv *MsgServer) Send(ctx context.Context, req *SendRequest) (*SendResponse, error) {
 	// TODO: make auth
 	c := &Conn{}
 	err := srv.db.
@@ -46,13 +45,13 @@ func (srv *MsgServer) Send(ctx context.Context, req *pb.SendRequest) (*pb.SendRe
 	if err != nil {
 		m := fmt.Sprintf("Can't select connection number %d - %s\n", req.ConnectionId, err)
 		srv.logger.Error(m)
-		return &pb.SendResponse{Result: false}, errors.New(m)
+		return &SendResponse{Result: false}, errors.New(m)
 	}
 
 	if _, ok := srv.conns[c.MtrxUserID]; !ok {
 		c.cli, err = joinMtrxClient(c)
 		if err != nil {
-			return &pb.SendResponse{Result: false}, err
+			return &SendResponse{Result: false}, err
 		}
 		c.ch = make(chan EventMessage)
 		srv.conns[c.MtrxUserID] = c
@@ -62,13 +61,13 @@ func (srv *MsgServer) Send(ctx context.Context, req *pb.SendRequest) (*pb.SendRe
 	_, err = srv.conns[c.MtrxUserID].cli.SendText(id.RoomID(c.MtrxRoomID), req.Message)
 	if err != nil {
 		srv.logger.Errorf("Can't send message to %v from %v", c.FacePeerID, c.FaceUserID)
-		return &pb.SendResponse{Result: false}, errors.New("send message error")
+		return &SendResponse{Result: false}, errors.New("send message error")
 	}
 	srv.logger.Infof("Message was sent to %v from %v", c.FacePeerID, c.FaceUserID)
-	return &pb.SendResponse{Result: true}, nil
+	return &SendResponse{Result: true}, nil
 }
 
-func (srv *MsgServer) Listen(req *pb.ListenRequest, stream pb.Messenger_ListenServer) error {
+func (srv *MsgServer) Listen(req *ListenRequest, stream Messenger_ListenServer) error {
 	// TODO: make auth
 	c := &Conn{}
 	err := srv.db.
@@ -88,10 +87,14 @@ func (srv *MsgServer) Listen(req *pb.ListenRequest, stream pb.Messenger_ListenSe
 	srv.conns[c.MtrxUserID] = c
 	go startMtrxSyncer(srv.wg, c, srv.logger)
 
+	// if ctx.Err() == context.Canceled {
+	// 	return status.New(codes.Canceled, "Client cancelled, abandoning.")
+	// }
+
 	for evt := range srv.conns[c.MtrxUserID].ch {
 		var senderFaceID string
 		srv.db.QueryRow("SELECT face_id FROM connection WHERE mtrx_user_id = ?", evt.sender).Scan(&senderFaceID)
-		resp := pb.ListenResponse{
+		resp := ListenResponse{
 			Content:   evt.content,
 			Timestamp: evt.timestamp,
 			Sender:    senderFaceID,
@@ -191,17 +194,17 @@ func (srv *MsgServer) CreateConn(userID int64, faceUserID, facePeerID string) ([
 		return nil, err
 	}
 
-	userPassword := common.RandStringRunes(10)
+	userPassword := utils.RandStringRunes(10)
 	resUser, err := cli.RegisterDummy(&mautrix.ReqRegister{
-		Username: common.RandStringRunes(10),
+		Username: utils.RandStringRunes(10),
 		Password: userPassword,
 	})
 	if err != nil {
 		return nil, err
 	}
-	peerPassword := common.RandStringRunes(10)
+	peerPassword := utils.RandStringRunes(10)
 	resPeer, err := cli.RegisterDummy(&mautrix.ReqRegister{
-		Username: common.RandStringRunes(10),
+		Username: utils.RandStringRunes(10),
 		Password: peerPassword,
 	})
 	if err != nil {

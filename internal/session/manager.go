@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"manyface.net/internal/common"
+	"manyface.net/internal/utils"
 )
 
 func NewSessionManager(db *sql.DB) *SessionManager {
@@ -15,7 +15,7 @@ func NewSessionManager(db *sql.DB) *SessionManager {
 }
 
 func (sm *SessionManager) Create(userID int64) (string, error) {
-	sessID := common.RandStringRunes(32)
+	sessID := utils.RandStringRunes(32)
 	res, err := sm.DB.Exec("INSERT INTO session (sess_id, user_id) VALUES (?, ?)", sessID, userID)
 	if err != nil {
 		return "", err

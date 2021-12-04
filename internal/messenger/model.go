@@ -7,8 +7,6 @@ import (
 	"go.uber.org/zap"
 	"manyface.net/internal/session"
 	"maunium.net/go/mautrix"
-
-	pb "manyface.net/grpc"
 )
 
 type MsgServer struct {
@@ -17,7 +15,7 @@ type MsgServer struct {
 	logger *zap.SugaredLogger
 	conns  map[string]*Conn
 
-	pb.UnimplementedMessengerServer
+	UnimplementedMessengerServer
 }
 
 type EventMessage struct {

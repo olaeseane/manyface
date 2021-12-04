@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/julienschmidt/httprouter"
-	"manyface.net/internal/common"
+	"manyface.net/internal/utils"
 )
 
 // POST /api/face
@@ -17,18 +17,18 @@ func (h *MessengerHandler) CreateFace(w http.ResponseWriter, r *http.Request, _ 
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
-		common.HandleError(w, err, http.StatusBadRequest, "Can't read body", h.Logger)
+		utils.HandleError(w, err, http.StatusBadRequest, "Can't read body", h.Logger)
 		return
 	}
 
 	face := &Face{UserID: sess.UserID}
 	if err = json.Unmarshal(body, face); err != nil {
-		common.HandleError(w, err, http.StatusBadRequest, "Can't unmarshal body json", h.Logger)
+		utils.HandleError(w, err, http.StatusBadRequest, "Can't unmarshal body json", h.Logger)
 		return
 	}
 	face.ID, err = h.Srv.CreateFace(face.Name, face.Description, face.UserID)
 	if err != nil || face.ID == "" {
-		common.HandleError(w, err, http.StatusInternalServerError, "Can't create face", h.Logger)
+		utils.HandleError(w, err, http.StatusInternalServerError, "Can't create face", h.Logger)
 		return
 	}
 
@@ -43,7 +43,7 @@ func (h *MessengerHandler) CreateFace(w http.ResponseWriter, r *http.Request, _ 
 func (h *MessengerHandler) GetFace(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	face, err := h.Srv.GetFaceByID(ps.ByName("FACE_ID"))
 	if err != nil {
-		common.HandleError(w, err, http.StatusInternalServerError, "Can't get face", h.Logger)
+		utils.HandleError(w, err, http.StatusInternalServerError, "Can't get face", h.Logger)
 		return
 	}
 
@@ -59,7 +59,7 @@ func (h *MessengerHandler) DelFace(w http.ResponseWriter, r *http.Request, ps ht
 	sess, _ := h.SM.GetFromCtx(r.Context())
 	f := ps.ByName("FACE_ID")
 	if err := h.Srv.DelFaceByID(f, sess.UserID); err != nil {
-		common.HandleError(w, err, http.StatusInternalServerError, "Can't delete face "+f, h.Logger)
+		utils.HandleError(w, err, http.StatusInternalServerError, "Can't delete face "+f, h.Logger)
 		return
 	}
 
@@ -75,7 +75,7 @@ func (h *MessengerHandler) GetFaces(w http.ResponseWriter, r *http.Request, _ ht
 	u := sess.UserID
 	faces, err := h.Srv.GetFacesByUser(u)
 	if err != nil {
-		common.HandleError(w, err, http.StatusInternalServerError, "Can't get faces for user "+strconv.Itoa(int(u)), h.Logger)
+		utils.HandleError(w, err, http.StatusInternalServerError, "Can't get faces for user "+strconv.Itoa(int(u)), h.Logger)
 		return
 	}
 
@@ -93,19 +93,19 @@ func (h *MessengerHandler) CreateConn(w http.ResponseWriter, r *http.Request, _ 
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
-		common.HandleError(w, err, http.StatusBadRequest, "Can't read body", h.Logger)
+		utils.HandleError(w, err, http.StatusBadRequest, "Can't read body", h.Logger)
 		return
 	}
 
 	conn := &Conn{}
 	if err = json.Unmarshal(body, conn); err != nil {
-		common.HandleError(w, err, http.StatusBadRequest, "Can't unmarshal body json", h.Logger)
+		utils.HandleError(w, err, http.StatusBadRequest, "Can't unmarshal body json", h.Logger)
 		return
 	}
 
 	connections, err := h.Srv.CreateConn(sess.UserID, conn.FaceUserID, conn.FacePeerID)
 	if err != nil || len(connections) != 2 {
-		common.HandleError(w, err, http.StatusInternalServerError, "Can't create connection", h.Logger)
+		utils.HandleError(w, err, http.StatusInternalServerError, "Can't create connection", h.Logger)
 		return
 	}
 
@@ -123,19 +123,19 @@ func (h *MessengerHandler) DeleteConn(w http.ResponseWriter, r *http.Request, _ 
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
-		common.HandleError(w, err, http.StatusBadRequest, "Can't read body", h.Logger)
+		utils.HandleError(w, err, http.StatusBadRequest, "Can't read body", h.Logger)
 		return
 	}
 
 	conn := &Conn{}
 	if err = json.Unmarshal(body, conn); err != nil {
-		common.HandleError(w, err, http.StatusBadRequest, "Can't unmarshal body json", h.Logger)
+		utils.HandleError(w, err, http.StatusBadRequest, "Can't unmarshal body json", h.Logger)
 		return
 	}
 
 	err = h.Srv.DeleteConn(sess.UserID, conn.FaceUserID, conn.FacePeerID)
 	if err != nil {
-		common.HandleError(w, err, http.StatusInternalServerError, "Can't delete connection", h.Logger)
+		utils.HandleError(w, err, http.StatusInternalServerError, "Can't delete connection", h.Logger)
 		return
 	}
 
@@ -150,7 +150,7 @@ func (h *MessengerHandler) GetConns(w http.ResponseWriter, r *http.Request, _ ht
 	u := sess.UserID
 	conns, err := h.Srv.GetConnsByUser(u)
 	if err != nil {
-		common.HandleError(w, err, http.StatusInternalServerError, "Can't get connections for user "+strconv.Itoa(int(u)), h.Logger)
+		utils.HandleError(w, err, http.StatusInternalServerError, "Can't get connections for user "+strconv.Itoa(int(u)), h.Logger)
 		return
 	}
 
