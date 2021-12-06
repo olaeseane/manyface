@@ -10,10 +10,11 @@ import (
 )
 
 type MsgServer struct {
-	wg     *sync.WaitGroup
-	db     *sql.DB
-	logger *zap.SugaredLogger
-	conns  map[string]*Conn
+	wg         *sync.WaitGroup
+	db         *sql.DB
+	logger     *zap.SugaredLogger
+	mtrxServer string
+	conns      map[string]*Conn
 
 	UnimplementedMessengerServer
 }

@@ -26,11 +26,12 @@ var (
 	// yellow := chalk.Yellow.NewStyle().Style
 )
 
-func NewServer(db *sql.DB, logger *zap.SugaredLogger) *MsgServer {
+func NewServer(db *sql.DB, logger *zap.SugaredLogger, mtrxServer string) *MsgServer {
 	return &MsgServer{
-		wg:     &sync.WaitGroup{},
-		db:     db,
-		logger: logger,
+		wg:         &sync.WaitGroup{},
+		db:         db,
+		logger:     logger,
+		mtrxServer: mtrxServer,
 		// clients: make(map[string]MtrxClient),
 		conns: make(map[string]*Conn),
 	}
@@ -49,7 +50,7 @@ func (srv *MsgServer) Send(ctx context.Context, req *SendRequest) (*SendResponse
 	}
 
 	if _, ok := srv.conns[c.MtrxUserID]; !ok {
-		c.cli, err = joinMtrxClient(c)
+		c.cli, err = joinMtrxClient(c, srv.mtrxServer)
 		if err != nil {
 			return &SendResponse{Result: false}, err
 		}
@@ -79,7 +80,7 @@ func (srv *MsgServer) Listen(req *ListenRequest, stream Messenger_ListenServer) 
 		return errors.New(m)
 	}
 
-	c.cli, err = joinMtrxClient(c)
+	c.cli, err = joinMtrxClient(c, srv.mtrxServer)
 	if err != nil {
 		return err
 	}
@@ -189,7 +190,7 @@ func (srv *MsgServer) CreateConn(userID int64, faceUserID, facePeerID string) ([
 	}
 
 	// TODO: create once in MsgServer for performance reason?
-	cli, err := mautrix.NewClient("http://localhost:8008", "", "") // TODO: change to config env
+	cli, err := mautrix.NewClient(srv.mtrxServer, "", "")
 	if err != nil {
 		return nil, err
 	}
@@ -341,8 +342,8 @@ func (srv *MsgServer) GetConnsByUser(userID int64) ([]*Conn, error) {
 	return conns, nil
 }
 
-func joinMtrxClient(c *Conn) (*mautrix.Client, error) {
-	cli, err := mautrix.NewClient("http://localhost:8008", "", "") // TODO: change to config env
+func joinMtrxClient(c *Conn, mtrxServer string) (*mautrix.Client, error) {
+	cli, err := mautrix.NewClient(mtrxServer, "", "")
 	if err != nil {
 		// logger.Errorf("Can't create client for connection %v", c.ID)
 		return nil, err

@@ -1,0 +1,20 @@
+rest: 
+  protocol: http
+  host: localhost
+  port: 8080
+
+grpc:
+  protocol: http
+  host: localhost
+  port: 5300
+
+matrix:
+  protocol: http
+  host: localhost
+  port: 8008
+
+db:
+ file: ../../db/data.db
+
+log:
+  file: ./server.log

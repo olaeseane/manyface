@@ -11,8 +11,7 @@ import (
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
-
-	pb "manyface.net/grpc"
+	"manyface.net/internal/config"
 	"manyface.net/internal/messenger"
 	"manyface.net/internal/middleware"
 	"manyface.net/internal/session"
@@ -22,24 +21,20 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// TODO: move to configuration?
-const (
-	webPort        = "8080"
-	grpcPort       = ":5300"
-	homeMtrxServer = "http://localhost:8008"
-)
-
-const (
-	logFile = "./server.log"
-	dbFile  = "../../db/data.db"
-)
+const appName = "manyface"
 
 func main() {
+	// Load configuration
+	cfg := &config.Config{}
+	if err := config.Read(appName, cfg); err != nil {
+		panic(err) // TODO: logger?
+	}
+
 	// Logger
-	logger := initLogger()
+	logger := initLogger(cfg)
 
 	// Database
-	db, err := sql.Open("sqlite3", dbFile)
+	db, err := sql.Open("sqlite3", cfg.DB.File)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -52,7 +47,7 @@ func main() {
 	sm := session.NewSessionManager(db)
 
 	// MessengerServer
-	srv := messenger.NewServer(db, logger)
+	srv := messenger.NewServer(db, logger, fmt.Sprintf("%s://%s:%s", cfg.Matrix.Protocol, cfg.Matrix.Host, cfg.Matrix.Port))
 	// go srv.StartSyncers()
 
 	// Handlers
@@ -68,16 +63,16 @@ func main() {
 	}
 
 	// Start grpc server
-	listener, err := net.Listen("tcp", grpcPort)
+	listener, err := net.Listen("tcp", ":"+cfg.Grpc.Port)
 	if err != nil {
 		grpclog.Fatalf("failed to listen: %v", err) // TODO: remove?
 		logger.Fatalf("failed to listen: %v", err)
 	}
 	opts := []grpc.ServerOption{}
 	grpcServer := grpc.NewServer(opts...)
-	pb.RegisterMessengerServer(grpcServer, srv)
-	logger.Infof("Starting grpc server at :%v", grpcPort)
-	fmt.Printf("Starting grpc server at :%v\n", grpcPort)
+	messenger.RegisterMessengerServer(grpcServer, srv)
+	logger.Infof("Starting grpc server at :%v", cfg.Grpc.Port)
+	fmt.Printf("Starting grpc server at :%v\n", cfg.Grpc.Port)
 	go grpcServer.Serve(listener)
 
 	// Routes and middleware
@@ -93,26 +88,27 @@ func main() {
 	router.GET("/api/conns", messengerHandler.GetConns)
 	mux := middleware.Auth(logger, sm, router)
 
-	// Start web server
-	logger.Infof("Starting web server at :%v", webPort)
-	fmt.Printf("Starting web server at :%v\n", webPort)
-	http.ListenAndServe("localhost:"+webPort, mux)
+	// Start rest api server
+	logger.Infof("Starting rest api server at :%v", cfg.Rest.Port)
+	fmt.Printf("Starting rest api server at :%v\n", cfg.Rest.Port)
+	http.ListenAndServe(cfg.Rest.Host+":"+cfg.Rest.Port, mux)
 	if err != nil {
-		logger.Fatalf("Can't start web server at :%v port, %v", webPort, err)
+		logger.Fatalf("Can't start rest api server at :%v port, %v", cfg.Rest.Port, err)
 		return
 	}
 
 	// srv.wg.Wait()
+
 }
 
-func initLogger() *zap.SugaredLogger {
+func initLogger(cfg *config.Config) *zap.SugaredLogger {
 	// option with standard settings
 	// logger, _ := zap.NewDevelopment() // or zap.NewProduction()
 	// defer logger.Sync()
 	// sugarLogger := logger.Sugar()
 
 	writerSyncer := func() zapcore.WriteSyncer {
-		file, _ := os.Create(logFile)
+		file, _ := os.Create(cfg.Log.File)
 		return zapcore.AddSync(file)
 	}()
 	encoder := func() zapcore.Encoder {
