@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"manyface.net/internal/common"
+	"manyface.net/internal/utils"
 )
 
 func NewRepo(db *sql.DB) *UserRepo {
@@ -19,8 +19,8 @@ func (repo *UserRepo) Register(username, password string) (int64, error) {
 		return -1, err
 	}
 
-	salt := common.RandStringRunes(8)
-	hashPassword := common.HashIt(password, salt)
+	salt := utils.RandStringRunes(8)
+	hashPassword := utils.HashIt(password, salt)
 	res, err := repo.db.Exec("INSERT INTO user (username, password) VALUES (?, ?)", username, hashPassword)
 	if err != nil {
 		return -1, err
@@ -43,7 +43,7 @@ func (repo *UserRepo) Login(username, password string) (int64, error) {
 	}
 
 	salt := string(dbHashPassword[0:8])
-	inHashPassword := common.HashIt(password, salt)
+	inHashPassword := utils.HashIt(password, salt)
 	if !bytes.Equal(inHashPassword, dbHashPassword) {
 		return -1, errors.New("password mismatched")
 	}
