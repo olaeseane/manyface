@@ -361,7 +361,7 @@ func joinMtrxClient(c *Conn, mtrxServer string) (*mautrix.Client, error) {
 	return cli, nil
 }
 
-func startMtrxSyncer(wg *sync.WaitGroup, c *Conn, logger *zap.SugaredLogger) {
+func startMtrxSyncer(wg *sync.WaitGroup, c *Conn, logger *zap.SugaredLogger) { // TODO: remove WG?
 	defer func() {
 		// defer wg.Done()
 		c.cli.StopSync()
@@ -377,7 +377,7 @@ func startMtrxSyncer(wg *sync.WaitGroup, c *Conn, logger *zap.SugaredLogger) {
 			roomID:    string(evt.RoomID),
 			timestamp: evt.Timestamp,
 		}:
-		default:
+		default: // TODO: remove?
 		}
 	})
 

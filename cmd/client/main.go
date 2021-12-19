@@ -16,7 +16,7 @@ import (
 	"github.com/ttacon/chalk"
 	"google.golang.org/grpc"
 
-	pb "manyface.net/grpc"
+	"manyface.net/internal/messenger"
 )
 
 // const grpcAddr string = "127.0.0.1:5300"
@@ -31,7 +31,7 @@ var (
 	httpCli = &http.Client{Timeout: time.Second * 5}
 
 	grpcConn *grpc.ClientConn
-	grpcCli  pb.MessengerClient
+	grpcCli  messenger.MessengerClient
 
 	loginResp = LoginResp{}
 
@@ -100,7 +100,7 @@ func main() {
 
 	grpcConn = getGrpcConn(*gs)
 	defer grpcConn.Close()
-	grpcCli = pb.NewMessengerClient(grpcConn)
+	grpcCli = messenger.NewMessengerClient(grpcConn)
 
 	commandCh := make(chan string)
 	go readCommands(commandCh)

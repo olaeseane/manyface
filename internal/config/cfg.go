@@ -44,10 +44,11 @@ func Read(appName string, config interface{}) error {
 
 	if _, err := govalidator.ValidateStruct(config); err != nil {
 		if allErrs, ok := err.(govalidator.Errors); ok {
+			var data []byte
 			for _, fld := range allErrs.Errors() {
-				data := []byte(fmt.Sprintf("field: %#v\n\n", fld))
-				return errors.New(string(data))
+				data = []byte(fmt.Sprintf("field: %#v\n\n", fld))
 			}
+			return errors.New(string(data))
 		}
 		return err
 	}

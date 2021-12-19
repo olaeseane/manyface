@@ -13,8 +13,6 @@ import (
 
 	"github.com/gosuri/uitable"
 	"manyface.net/internal/messenger"
-
-	pb "manyface.net/grpc"
 )
 
 func ListFaces() {
@@ -128,7 +126,7 @@ func ListConns() {
 }
 
 func SendMsg(connID int64, message string) {
-	request := &pb.SendRequest{
+	request := &messenger.SendRequest{
 		Message:      message,
 		ConnectionId: connID,
 	}
@@ -163,7 +161,7 @@ func ListenMsg() {
 	// fmt.Println(conns)
 	for _, c := range conns {
 		go func(c messenger.Conn) {
-			request := pb.ListenRequest{
+			request := messenger.ListenRequest{
 				ConnectionId: c.ID,
 			}
 			// fmt.Printf("%+v\n", request)
