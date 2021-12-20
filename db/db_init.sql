@@ -1,11 +1,18 @@
 DROP TABLE IF EXISTS connection;
 DROP TABLE IF EXISTS face;
-DROP TABLE IF EXISTS user;
+DROP TABLE IF EXISTS userV1beta1;
+DROP TABLE IF EXISTS userV2beta1;
 DROP TABLE IF EXISTS session;
+-- DROP TABLE IF EXISTS wordlist;
 PRAGMA foreign_keys = ON;
-CREATE TABLE IF NOT EXISTS user (
+CREATE TABLE IF NOT EXISTS userV1beta1 (
     user_id INTEGER PRIMARY KEY,
     username TEXT NOT NULL,
+    password BLOB NOT NULL
+);
+CREATE TABLE IF NOT EXISTS userV2beta1 (
+    user_id INTEGER PRIMARY KEY,
+    seed TEXT NOT NULL,
     password BLOB NOT NULL
 );
 CREATE TABLE IF NOT EXISTS face (
@@ -30,9 +37,10 @@ CREATE TABLE IF NOT EXISTS session (
     sess_id TEXT PRIMARY KEY,
     user_id INTEGER NOT NULL
 );
-INSERT INTO user (username, password)
+CREATE TABLE IF NOT EXISTS wordlist (word TEXT NOT NULL);
+INSERT INTO userV1beta1 (username, password)
 VALUES ('user1', 'welcome');
-INSERT INTO user (username, password)
+INSERT INTO userV1beta1 (username, password)
 VALUES ('user2', 'welcome');
 INSERT INTO face (face_id, name, description, user_id)
 VALUES (

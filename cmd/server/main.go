@@ -3,14 +3,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/grpclog"
 	"manyface.net/internal/config"
 	"manyface.net/internal/messenger"
 	"manyface.net/internal/middleware"
@@ -62,30 +59,36 @@ func main() {
 		SM:     sm,
 	}
 
-	// Start grpc server
-	listener, err := net.Listen("tcp", ":"+cfg.Grpc.Port)
-	if err != nil {
-		grpclog.Fatalf("failed to listen: %v", err) // TODO: remove?
-		logger.Fatalf("failed to listen: %v", err)
-	}
-	opts := []grpc.ServerOption{}
-	grpcServer := grpc.NewServer(opts...)
-	messenger.RegisterMessengerServer(grpcServer, srv)
-	logger.Infof("Starting grpc server at :%v", cfg.Grpc.Port)
-	fmt.Printf("Starting grpc server at :%v\n", cfg.Grpc.Port)
-	go grpcServer.Serve(listener)
+	/*
+		// Start grpc server
+		listener, err := net.Listen("tcp", ":"+cfg.Grpc.Port)
+		if err != nil {
+			grpclog.Fatalf("failed to listen: %v", err) // TODO: remove?
+			logger.Fatalf("failed to listen: %v", err)
+		}
+		opts := []grpc.ServerOption{}
+		grpcServer := grpc.NewServer(opts...)
+		messenger.RegisterMessengerServer(grpcServer, srv)
+		logger.Infof("Starting grpc server at :%v", cfg.Grpc.Port)
+		fmt.Printf("Starting grpc server at :%v\n", cfg.Grpc.Port)
+		go grpcServer.Serve(listener)
+	*/
 
 	// Routes and middleware
 	router := httprouter.New()
-	router.POST("/api/reg", userHandler.Register)
-	router.POST("/api/login", userHandler.Login)
-	router.POST("/api/face", messengerHandler.CreateFace)
-	router.GET("/api/face/:FACE_ID", messengerHandler.GetFace)
-	router.DELETE("/api/face/:FACE_ID", messengerHandler.DelFace)
-	router.GET("/api/faces", messengerHandler.GetFaces)
-	router.POST("/api/conn", messengerHandler.CreateConn)
-	router.DELETE("/api/conn", messengerHandler.DeleteConn)
-	router.GET("/api/conns", messengerHandler.GetConns)
+	router.POST("/api/v1beta1/reg", userHandler.RegisterV1beta1)
+	router.POST("/api/v1beta1/login", userHandler.LoginV1beta1)
+
+	router.POST("/api/v2beta1/user", userHandler.RegisterV2beta1)
+	router.GET("/api/v2beta1/user", userHandler.LoginV2beta1)
+
+	router.POST("/api/v1beta1/face", messengerHandler.CreateFace)
+	router.GET("/api/v1beta1/face/:FACE_ID", messengerHandler.GetFace)
+	router.DELETE("/api/v1beta1/face/:FACE_ID", messengerHandler.DelFace)
+	router.GET("/api/v1beta1/faces", messengerHandler.GetFaces)
+	router.POST("/api/v1beta1/conn", messengerHandler.CreateConn)
+	router.DELETE("/api/v1beta1/conn", messengerHandler.DeleteConn)
+	router.GET("/api/v1beta1/conns", messengerHandler.GetConns)
 	mux := middleware.Auth(logger, sm, router)
 
 	// Start rest api server
