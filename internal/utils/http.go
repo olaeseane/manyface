@@ -1,11 +1,13 @@
 package utils
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"go.uber.org/zap"
 )
 
+// TODO: remove func
 func HandleError(w http.ResponseWriter, err error, status int, msg string, logger *zap.SugaredLogger) {
 	var errMsg string
 	if err != nil {
@@ -17,30 +19,29 @@ func HandleError(w http.ResponseWriter, err error, status int, msg string, logge
 	logger.Error(errMsg)
 }
 
-/*
-type MyResponse struct {
+type ServerResponse struct {
 	Body  interface{} `json:"body,omitempty"`
 	Error string      `json:"error,omitempty"`
 }
 
-func RespJSON(w http.ResponseWriter, body interface{}) {
+func RespJSON(w http.ResponseWriter, status int, body interface{}) {
+	w.WriteHeader(status)
 	w.Header().Add("Content-Type", "application/json")
-	respJSON, _ := json.Marshal(&MyResponse{
+	respJSON, _ := json.Marshal(&ServerResponse{
 		Body: body,
 	})
 	w.Write(respJSON)
 }
 
-func RespJSONError(w http.ResponseWriter, status int, err error, resp string) {
+func RespJSONError(w http.ResponseWriter, status int, err error, text string, logger *zap.SugaredLogger) {
 	if err != nil {
-		log.Println(err)
+		text = text + " - " + err.Error()
 	}
 	w.WriteHeader(status)
 	w.Header().Add("Content-Type", "application/json")
-	respJSON, _ := json.Marshal(&MyResponse{
-		Error: resp,
+	respJSON, _ := json.Marshal(&ServerResponse{
+		Error: text,
 	})
 	w.Write(respJSON)
+	logger.Error(text)
 }
-
-*/
