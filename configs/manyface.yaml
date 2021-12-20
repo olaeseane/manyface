@@ -14,7 +14,7 @@ matrix:
   port: 8008
 
 db:
-  file: ../../db/data.db
+  file: ./db/data.db
 
 log:
   file: ./server.log

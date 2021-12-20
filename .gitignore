@@ -79,3 +79,4 @@ cmd/client/client
 cmd/server/server
 
 /tmp
+/bin
