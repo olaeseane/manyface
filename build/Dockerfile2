@@ -1,0 +1,16 @@
+FROM golang:1.17.5
+
+WORKDIR /go/src/manyface
+COPY . .
+
+# RUN apk --no-cache add make git gcc libtool musl-dev ca-certificates dumb-init 
+RUN go get -d -v ./...
+# RUN go install -v ./...
+RUN go build -o /go/bin/manyface ./cmd/server/main.go
+
+EXPOSE 8080
+
+CMD ["/go/bin/manyface"]
+
+
+# size 1.27GB

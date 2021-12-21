@@ -94,7 +94,8 @@ func main() {
 	// Start rest api server
 	logger.Infof("Starting rest api server at :%v", cfg.Rest.Port)
 	fmt.Printf("Starting rest api server at :%v\n", cfg.Rest.Port)
-	http.ListenAndServe(cfg.Rest.Host+":"+cfg.Rest.Port, mux)
+	// http.ListenAndServe(cfg.Rest.Host+":"+cfg.Rest.Port, mux)
+	http.ListenAndServe(":"+cfg.Rest.Port, mux)
 	if err != nil {
 		logger.Fatalf("Can't start rest api server at :%v port, %v", cfg.Rest.Port, err)
 		return

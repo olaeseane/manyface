@@ -1,0 +1,16 @@
+FROM golang:alpine
+
+WORKDIR /go/src/manyface
+COPY . /go/src/manyface
+
+# RUN apk add build-base
+RUN apk --no-cache add make git gcc libtool musl-dev ca-certificates dumb-init 
+RUN go mod download
+RUN go build -o /go/bin/manyface ./cmd/server/main.go
+
+EXPOSE 8080
+
+CMD ["/go/bin/manyface"]
+
+
+# size 1.17GB

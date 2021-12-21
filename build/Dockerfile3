@@ -1,0 +1,25 @@
+# шаг 0 - скачка зависимостей
+FROM golang:1.17.5 AS dependencies
+WORKDIR /go/src/manyface
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+
+# 1 шаг - сборка пакета
+FROM dependencies AS build
+WORKDIR /go/src/manyface
+COPY . .
+RUN go build -o /go/bin/manyface ./cmd/server/main.go
+
+# 2 шаг - создание контейнера для запуска
+FROM debian:buster-slim
+WORKDIR /app
+COPY --from=build /go/bin/manyface /app/
+COPY --from=build /go/src/manyface/db /app/db
+COPY --from=build /go/src/manyface/configs /app/configs
+RUN chmod +x /app/manyface
+EXPOSE 8080/tcp
+CMD ["/app/manyface"]
+
+
+# size 110MB
