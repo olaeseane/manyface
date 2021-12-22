@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: manyface
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: manyface
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: manyface
+    spec:
+      containers:
+      - image: docker.io/olaesean/manyface:golang1.17.5
+        name: manyface
+        command: ["/go/bin/manyface"]
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: 150Mi
+        env:
+        - name: CFG
+          value: /app/configs
+        volumeMounts:
+        - name: configs
+          mountPath: /app/configs
+          readOnly: true
+        - name: data
+          mountPath: /app/db
+      volumes:
+      - name: data
+        persistentVolumeClaim: 
+          claimName: manyface
+      - name: configs
+        configMap: 
+          name: manyface
