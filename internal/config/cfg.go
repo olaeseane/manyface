@@ -3,9 +3,15 @@ package config
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/spf13/viper"
+)
+
+const (
+	envName = "CFG"
+	fileExt = "yaml"
 )
 
 type Config struct {
@@ -28,10 +34,10 @@ type Path struct {
 
 func Read(appName string, config interface{}) error {
 	v := viper.New()
-	v.SetConfigName(appName)                 // name of config file (without extension)
-	v.SetConfigType("yaml")                  // REQUIRED if the config file does not have the extension in the name
-	v.AddConfigPath("/etc/" + appName + "/") // path to look for the config file in
-	v.AddConfigPath("./configs/")            // optionally look for config in the working directory
+	v.SetConfigName(appName) // name of config file (without extension)
+	v.SetConfigType(fileExt) // REQUIRED if the config file does not have the extension in the name
+	v.AddConfigPath(os.Getenv(envName))
+	v.AddConfigPath("./configs/") // optionally look for config in the working directory
 	if err := v.ReadInConfig(); err != nil {
 		return fmt.Errorf("fatal error config file: %w", err)
 	}
