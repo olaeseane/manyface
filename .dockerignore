@@ -1,7 +1,13 @@
-bin/*
-images/*
-tmp/*
+api
+bin
+build
+configs
+db
+tmp
+.air.toml
 .git
+.vscode
 .DS_Store
 .gitignore
 TODO
+*.log
