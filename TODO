@@ -1,5 +1,7 @@
 
 Todo:
+
+
   ☐ Codogeneration for json
   ✔ Make configuration mgmt using Viper @done(21-12-19 00:24)
   ☐ Better architecture for syncer
@@ -14,9 +16,15 @@ Todo:
   ☐ Set deadlines for client grpc call and check them for grpc server
   ☐ Perfomance analysis [https://habr.com/ru/company/kaspersky/blog/591725/](https://habr.com/ru/company/kaspersky/blog/591725/]
   ☐ QR - new entity?
-  ☐ make file
-  ☐ docker & k8s deployment
+  ☐ make file @started(21-12-22 13:20)
+  ☐ docker & k8s deployment @started(21-12-21 13:19)
   ☐ Using [errors.as](http://errors.as) and err.Code as in AWS - > Make good error message (e.g. in func (srv *MsgServer) Send)
   ☐ Respjsonerror and RespJSON from hw 12_photolist
   ☐ http over grpc
   ☐ Make readinessProbe/livenessProbe/startupProbe for k8s
+  ☐ Add git branches
+
+  Features
+  ✔ Seed, mnemonic generation @done(21-12-23 13:23)
+  ☐ Face refactoring (add purpose, nick, bio, comments, server)
+

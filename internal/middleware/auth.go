@@ -25,7 +25,7 @@ func Auth(logger *zap.SugaredLogger, sm *session.SessionManager, next http.Handl
 		sessID := r.Header.Get("session-id")
 		sess, err := sm.Check(sessID)
 		if err != nil {
-			http.Error(w, "Authentication error", http.StatusUnauthorized)
+			http.Error(w, "Authentication error", http.StatusUnauthorized) // TODO: change to RespJSONError()
 			logger.Errorf("Session %v not found", sessID)
 			return
 		}

@@ -15,6 +15,14 @@ CREATE TABLE IF NOT EXISTS userV2beta1 (
     seed TEXT NOT NULL,
     password BLOB NOT NULL
 );
+CREATE TABLE IF NOT EXISTS faceV2beta1 (
+    face_id TEXT PRIMARY KEY,
+    nick TEXT NOT NULL,
+    bio TEXT,
+    comments TEXT,
+    user_id INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES user (user_id) ON UPDATE RESTRICT ON DELETE RESTRICT
+) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS face (
     face_id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
