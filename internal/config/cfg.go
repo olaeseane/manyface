@@ -37,7 +37,8 @@ func Read(appName string, config interface{}) error {
 	v.SetConfigName(appName) // name of config file (without extension)
 	v.SetConfigType(fileExt) // REQUIRED if the config file does not have the extension in the name
 	v.AddConfigPath(os.Getenv(envName))
-	v.AddConfigPath("./configs/") // optionally look for config in the working directory
+	v.AddConfigPath("./configs/")     // optionally look for config in the working directory
+	v.AddConfigPath("../../configs/") // optionally look for config in the working directory NOTE: remove for k8s deploy
 	if err := v.ReadInConfig(); err != nil {
 		return fmt.Errorf("fatal error config file: %w", err)
 	}
