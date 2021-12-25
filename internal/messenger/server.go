@@ -2,9 +2,7 @@ package messenger
 
 import (
 	"context"
-	"crypto/md5"
 	"database/sql"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"sync"
@@ -111,6 +109,7 @@ func (srv *MsgServer) Listen(req *ListenRequest, stream Messenger_ListenServer) 
 	return nil
 }
 
+/*
 func (srv *MsgServer) CreateFace(name, description string, userID int64) (string, error) {
 	hash := md5.Sum([]byte(name + "|" + description))
 	face_id := hex.EncodeToString(hash[:])
@@ -169,6 +168,7 @@ func (srv *MsgServer) DelFaceByID(faceID string, userID int64) error {
 	}
 	return nil
 }
+*/
 
 func (srv *MsgServer) CreateConn(userID int64, faceUserID, facePeerID string) ([]*Conn, error) {
 	var faceUserName, facePeerName string

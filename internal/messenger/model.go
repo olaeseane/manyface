@@ -34,8 +34,12 @@ type MessengerHandler struct {
 
 type Face struct {
 	ID          string `json:"face_id,omitempty"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        string `json:"name"`        // TODO: remove
+	Description string `json:"description"` // TODO: remove
+	Nick        string `json:"nick"`
+	Purpose     string `json:"purpose"`
+	Bio         string `json:"bio"`
+	Comments    string `json:"comments"`
 	UserID      int64  `json:"user_id"`
 }
 

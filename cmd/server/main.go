@@ -82,10 +82,18 @@ func main() {
 	router.POST("/api/v2beta1/user", userHandler.RegisterV2beta1)
 	router.GET("/api/v2beta1/user", userHandler.LoginV2beta1)
 
-	router.POST("/api/v1beta1/face", messengerHandler.CreateFace)
-	router.GET("/api/v1beta1/face/:FACE_ID", messengerHandler.GetFace)
-	router.DELETE("/api/v1beta1/face/:FACE_ID", messengerHandler.DelFace)
-	router.GET("/api/v1beta1/faces", messengerHandler.GetFaces)
+	router.POST("/api/v2beta1/face", messengerHandler.CreateFaceV2beta1)
+	router.GET("/api/v2beta1/face/:FACE_ID", messengerHandler.GetFaceV2beta1)
+	router.GET("/api/v2beta1/faces", messengerHandler.GetFacesV2beta1)
+	router.DELETE("/api/v2beta1/face/:FACE_ID", messengerHandler.DelFaceV2beta1)
+	router.GET("/api/v2beta1/qr/:FACE_ID", messengerHandler.GenerateFaceQRV2beta1)
+
+	/*
+		router.POST("/api/v1beta1/face", messengerHandler.CreateFace)
+		router.GET("/api/v1beta1/face/:FACE_ID", messengerHandler.GetFace)
+		router.DELETE("/api/v1beta1/face/:FACE_ID", messengerHandler.DelFace)
+		router.GET("/api/v1beta1/faces", messengerHandler.GetFaces)
+	*/
 	router.POST("/api/v1beta1/conn", messengerHandler.CreateConn)
 	router.DELETE("/api/v1beta1/conn", messengerHandler.DeleteConn)
 	router.GET("/api/v1beta1/conns", messengerHandler.GetConns)
@@ -95,7 +103,7 @@ func main() {
 	logger.Infof("Starting rest api server at :%v", cfg.Rest.Port)
 	fmt.Printf("Starting rest api server at :%v\n", cfg.Rest.Port)
 	// http.ListenAndServe(cfg.Rest.Host+":"+cfg.Rest.Port, mux)
-	http.ListenAndServe(":"+cfg.Rest.Port, mux)
+	http.ListenAndServe("localhost:"+cfg.Rest.Port, mux) // NOTE: remove if deploy into k8s
 	if err != nil {
 		logger.Fatalf("Can't start rest api server at :%v port, %v", cfg.Rest.Port, err)
 		return

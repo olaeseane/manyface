@@ -10,6 +10,7 @@ import (
 	"manyface.net/internal/utils"
 )
 
+/*
 // POST /api/face
 func (h *MessengerHandler) CreateFace(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	sess, _ := h.SM.GetFromCtx(r.Context())
@@ -85,6 +86,7 @@ func (h *MessengerHandler) GetFaces(w http.ResponseWriter, r *http.Request, _ ht
 
 	h.Logger.Infof("Got the faces for user %v ", u)
 }
+*/
 
 // POST /api/connection
 func (h *MessengerHandler) CreateConn(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
