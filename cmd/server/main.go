@@ -18,6 +18,10 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// @title Manyface proxy server
+// @version 0.2.1
+// @BasePath /api/v2beta1
+
 const appName = "manyface"
 
 func main() {
@@ -86,6 +90,7 @@ func main() {
 	router.GET("/api/v2beta1/face/:FACE_ID", messengerHandler.GetFaceV2beta1)
 	router.GET("/api/v2beta1/faces", messengerHandler.GetFacesV2beta1)
 	router.DELETE("/api/v2beta1/face/:FACE_ID", messengerHandler.DelFaceV2beta1)
+	router.PUT("/api/v2beta1/face/:FACE_ID", messengerHandler.UpdFaceV2beta1)
 	router.GET("/api/v2beta1/qr/:FACE_ID", messengerHandler.GenerateFaceQRV2beta1)
 
 	/*

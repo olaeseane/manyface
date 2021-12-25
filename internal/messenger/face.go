@@ -67,3 +67,16 @@ func (srv *MsgServer) DelFaceByIDV2beta1(faceID string, userID int64) error {
 	}
 	return nil
 }
+
+func (srv *MsgServer) UpdFaceV2beta1(face *Face) error {
+	res, err := srv.db.Exec("UPDATE faceV2beta1 SET nick =?, purpose = ?, bio = ?, comments = ? WHERE face_id = ? AND user_id = ?",
+		&face.Nick, &face.Purpose, &face.Bio, &face.Comments, &face.ID, &face.UserID)
+	if err != nil {
+		return err
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil || rowCnt != 1 {
+		return errors.New("face update error")
+	}
+	return nil
+}

@@ -33,14 +33,12 @@ type MessengerHandler struct {
 }
 
 type Face struct {
-	ID          string `json:"face_id,omitempty"`
-	Name        string `json:"name"`        // TODO: remove
-	Description string `json:"description"` // TODO: remove
-	Nick        string `json:"nick"`
-	Purpose     string `json:"purpose"`
-	Bio         string `json:"bio"`
-	Comments    string `json:"comments"`
-	UserID      int64  `json:"user_id"`
+	ID       string `json:"face_id" example:"98db6968134c5a069d6a513c3993c8af"`
+	Nick     string `json:"nick" example:"Bob"`
+	Purpose  string `json:"purpose" example:"For work"`
+	Bio      string `json:"bio" example:"Some bio"`
+	Comments string `json:"comments" example:"Some comments"`
+	UserID   int64  `json:"user_id" example:"10"`
 }
 
 type Conn struct {

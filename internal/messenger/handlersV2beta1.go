@@ -79,14 +79,42 @@ func (h *MessengerHandler) GetFacesV2beta1(w http.ResponseWriter, r *http.Reques
 // DELETE /api/face/{FACE_ID}
 func (h *MessengerHandler) DelFaceV2beta1(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sess, _ := h.SM.GetFromCtx(r.Context())
-	f := ps.ByName("FACE_ID")
-	if err := h.Srv.DelFaceByIDV2beta1(f, sess.UserID); err != nil {
-		utils.RespJSONError(w, http.StatusInternalServerError, err, "Can't delete face "+f, h.Logger)
+	faceID := ps.ByName("FACE_ID")
+	if err := h.Srv.DelFaceByIDV2beta1(faceID, sess.UserID); err != nil {
+		utils.RespJSONError(w, http.StatusInternalServerError, err, "Can't delete face "+faceID, h.Logger)
 		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-	h.Logger.Infof("The face %v was deleted", f)
+	h.Logger.Infof("The face %v was deleted", faceID)
+}
+
+func (h *MessengerHandler) UpdFaceV2beta1(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	sess, _ := h.SM.GetFromCtx(r.Context())
+	faceID := ps.ByName("FACE_ID")
+
+	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		utils.RespJSONError(w, http.StatusBadRequest, err, "Can't read body", h.Logger)
+		return
+	}
+
+	face := &Face{ID: faceID, UserID: sess.UserID}
+	if err = json.Unmarshal(body, face); err != nil {
+		utils.RespJSONError(w, http.StatusBadRequest, err, "Can't unmarshal body json", h.Logger)
+		return
+	}
+	err = h.Srv.UpdFaceV2beta1(face)
+	if err != nil {
+		utils.RespJSONError(w, http.StatusInternalServerError, err, "Can't update face", h.Logger)
+		return
+	}
+
+	utils.RespJSON(w, http.StatusOK, map[string]interface{}{
+		"face": &face,
+	})
+	h.Logger.Infof("The face %v - %v was update", face.ID, face.Nick)
 }
 
 func (h *MessengerHandler) GenerateFaceQRV2beta1(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
