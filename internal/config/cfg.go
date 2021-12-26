@@ -18,7 +18,7 @@ type Config struct {
 	Rest   Address `valid:"required"`
 	Grpc   Address `valid:"required"`
 	Matrix Address `valid:"required"`
-	DB     Path    `valid:"required,"`
+	Data   Data    `valid:"required,"`
 	Log    Path    `valid:"required"`
 }
 
@@ -30,6 +30,11 @@ type Address struct {
 
 type Path struct {
 	File string `valid:"required"`
+}
+
+type Data struct {
+	DB   string `valid:"required"`
+	BLOB string `valid:"required"`
 }
 
 func Read(appName string, config interface{}) error {

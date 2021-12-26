@@ -80,3 +80,4 @@ cmd/server/server
 
 /tmp
 /bin
+/db/blob/*

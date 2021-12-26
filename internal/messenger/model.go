@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"go.uber.org/zap"
+	"manyface.net/internal/blobstorage"
 	"manyface.net/internal/session"
 	"maunium.net/go/mautrix"
 )
@@ -30,6 +31,7 @@ type MessengerHandler struct {
 	Logger *zap.SugaredLogger
 	Srv    *MsgServer
 	SM     *session.SessionManager
+	BS     *blobstorage.FSStorage
 }
 
 type Face struct {

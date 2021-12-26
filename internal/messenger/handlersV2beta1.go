@@ -90,24 +90,32 @@ func (h *MessengerHandler) DelFaceV2beta1(w http.ResponseWriter, r *http.Request
 }
 
 func (h *MessengerHandler) UpdFaceV2beta1(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// r.ParseMultipartForm(5 * 1024 * 1025) // TODO: save or remove?
 	sess, _ := h.SM.GetFromCtx(r.Context())
 	faceID := ps.ByName("FACE_ID")
 
-	body, err := ioutil.ReadAll(r.Body)
-	defer r.Body.Close()
-	if err != nil {
-		utils.RespJSONError(w, http.StatusBadRequest, err, "Can't read body", h.Logger)
+	body := r.FormValue("face")
+	face := &Face{ID: faceID, UserID: sess.UserID}
+	if err := json.Unmarshal([]byte(body), face); err != nil {
+		utils.RespJSONError(w, http.StatusBadRequest, err, "Can't unmarshal face json", h.Logger)
 		return
 	}
 
-	face := &Face{ID: faceID, UserID: sess.UserID}
-	if err = json.Unmarshal(body, face); err != nil {
-		utils.RespJSONError(w, http.StatusBadRequest, err, "Can't unmarshal body json", h.Logger)
+	avatar, _, err := r.FormFile("avatar")
+	if err != nil {
+		utils.RespJSONError(w, http.StatusBadRequest, err, "Can't read avatar", h.Logger)
 		return
 	}
+	defer avatar.Close()
+
 	err = h.Srv.UpdFaceV2beta1(face)
 	if err != nil {
 		utils.RespJSONError(w, http.StatusInternalServerError, err, "Can't update face", h.Logger)
+		return
+	}
+	err = h.BS.Put(avatar, face.ID+".png")
+	if err != nil {
+		utils.RespJSONError(w, http.StatusInternalServerError, err, "Can't save avatar", h.Logger)
 		return
 	}
 
@@ -117,7 +125,7 @@ func (h *MessengerHandler) UpdFaceV2beta1(w http.ResponseWriter, r *http.Request
 	h.Logger.Infof("The face %v - %v was update", face.ID, face.Nick)
 }
 
-func (h *MessengerHandler) GenerateFaceQRV2beta1(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *MessengerHandler) GetFaceQRV2beta1(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	faceID := ps.ByName("FACE_ID")
 
 	qrCode, err := qr.Encode(faceID, qr.L, qr.Auto)
@@ -132,4 +140,18 @@ func (h *MessengerHandler) GenerateFaceQRV2beta1(w http.ResponseWriter, r *http.
 	}
 	w.WriteHeader(http.StatusOK)
 	png.Encode(w, qrCode)
+}
+
+func (h *MessengerHandler) GetFaceAvatarV2beta1(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	faceID := ps.ByName("FACE_ID")
+
+	avatar, err := h.BS.Get(faceID + ".png")
+	if err != nil {
+		utils.RespJSONError(w, http.StatusInternalServerError, err, "Can't get avatar for face "+faceID, h.Logger)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Add("Content-Type", "application/octet-stream")
+	w.Write(avatar)
 }

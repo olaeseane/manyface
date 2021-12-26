@@ -13,8 +13,12 @@ matrix:
   host: localhost
   port: 8008
 
-db:
-  file: ../db/data.db
+data:
+  # file: ./db/data.db
+  # file: /app/db/data.db
+  # file: ../../db/data.db
+  db: /Users/i070933/Github/matrix/manyface/db/data.db  # TODO: remove
+  blob: /Users/i070933/Github/matrix/manyface/db/blob/  # TODO: remove
 
 log:
-  file: ../server.log
+  file: ./server.log
