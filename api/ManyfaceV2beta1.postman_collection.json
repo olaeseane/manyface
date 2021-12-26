@@ -20,9 +20,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{host-internal}}/api/v2beta1/user",
+					"raw": "{{host}}/api/v2beta1/user",
 					"host": [
-						"{{host-internal}}"
+						"{{host}}"
 					],
 					"path": [
 						"api",
@@ -43,7 +43,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"user_id\": 2,\n    \"password\": \"welcome\",\n    \"mnemonic\": [\n        \"barely\",\n        \"belt\",\n        \"another\",\n        \"glide\",\n        \"live\",\n        \"rate\",\n        \"apology\",\n        \"orange\",\n        \"soldier\",\n        \"merge\",\n        \"combine\",\n        \"tomorrow\"\n    ]\n}",
+					"raw": "{\n    \"user_id\": 8,\n    \"password\": \"welcome\",\n    \"mnemonic\": [\n        \"barely\",\n        \"belt\",\n        \"another\",\n        \"glide\",\n        \"live\",\n        \"rate\",\n        \"apology\",\n        \"orange\",\n        \"soldier\",\n        \"merge\",\n        \"combine\",\n        \"tomorrow\"\n    ]\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -51,9 +51,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{host-internal}}/api/v2beta1/user",
+					"raw": "{{host}}/api/v2beta1/user",
 					"host": [
-						"{{host-internal}}"
+						"{{host}}"
 					],
 					"path": [
 						"api",
@@ -91,7 +91,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"nick\": \"Willy_Wanka\",\n    \"purpose\": \"purpose\",\n    \"bio\": \"bio\",\n    \"comments\": \"for chatting on the internet\"\n}",
+					"raw": "{\n    \"nick\": \"Test Face 1\",\n    \"purpose\": \"purpose\",\n    \"bio\": \"bio\",\n    \"comments\": \"for testing\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -99,9 +99,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{host-internal}}/api/v2beta1/face",
+					"raw": "{{host}}/api/v2beta1/face",
 					"host": [
-						"{{host-internal}}"
+						"{{host}}"
 					],
 					"path": [
 						"api",
@@ -138,14 +138,15 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{host-internal}}/api/face/cd456136f58c0abb5e80bd0b360d9228",
+					"raw": "{{host}}/api/v2beta1/face/98db6968134c5a069d6a513c3993c8af",
 					"host": [
-						"{{host-internal}}"
+						"{{host}}"
 					],
 					"path": [
 						"api",
+						"v2beta1",
 						"face",
-						"cd456136f58c0abb5e80bd0b360d9228"
+						"98db6968134c5a069d6a513c3993c8af"
 					]
 				}
 			},
@@ -177,12 +178,13 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{host-internal}}/api/faces",
+					"raw": "{{host}}/api/v2beta1/faces",
 					"host": [
-						"{{host-internal}}"
+						"{{host}}"
 					],
 					"path": [
 						"api",
+						"v2beta1",
 						"faces"
 					]
 				}
@@ -224,9 +226,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{host-internal}}/api/v2beta1/face",
+					"raw": "{{host}}/api/v2beta1/face",
 					"host": [
-						"{{host-internal}}"
+						"{{host}}"
 					],
 					"path": [
 						"api",
@@ -263,12 +265,13 @@
 				"method": "DELETE",
 				"header": [],
 				"url": {
-					"raw": "{{host-internal}}/api/face/cd456136f58c0abb5e80bd0b360d9228",
+					"raw": "{{host}}/api/v2beta1/face/cd456136f58c0abb5e80bd0b360d9228",
 					"host": [
-						"{{host-internal}}"
+						"{{host}}"
 					],
 					"path": [
 						"api",
+						"v2beta1",
 						"face",
 						"cd456136f58c0abb5e80bd0b360d9228"
 					]
@@ -302,9 +305,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{host-internal}}/api/v2beta1/qr/cd456136f58c0abb5e80bd0b360d9228",
+					"raw": "{{host}}/api/v2beta1/qr/cd456136f58c0abb5e80bd0b360d9228",
 					"host": [
-						"{{host-internal}}"
+						"{{host}}"
 					],
 					"path": [
 						"api",
