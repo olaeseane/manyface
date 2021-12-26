@@ -217,8 +217,19 @@
 				"method": "PUT",
 				"header": [],
 				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"nick\": \"Willy_Wanka_Updated\",\n    \"purpose\": \"purpose updated\",\n    \"bio\": \"bio updated\",\n    \"comments\": \"for chatting on the internet updated\"\n}",
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "avatar",
+							"type": "file",
+							"src": "/Users/i070933/Desktop/avatar.jpeg"
+						},
+						{
+							"key": "face",
+							"value": "{ \"nick\": \"Test Face 1 updated\",       \"purpose\": \"purpose updated\", \"bio\": \"bio updated\",       \"comments\": \"for testing updated\"}",
+							"type": "text"
+						}
+					],
 					"options": {
 						"raw": {
 							"language": "json"
@@ -226,14 +237,15 @@
 					}
 				},
 				"url": {
-					"raw": "{{host}}/api/v2beta1/face",
+					"raw": "{{host}}/api/v2beta1/face/2c5eccf7e741459e5becbdf8a01602fc",
 					"host": [
 						"{{host}}"
 					],
 					"path": [
 						"api",
 						"v2beta1",
-						"face"
+						"face",
+						"2c5eccf7e741459e5becbdf8a01602fc"
 					]
 				}
 			},
@@ -280,7 +292,7 @@
 			"response": []
 		},
 		{
-			"name": "GenerateFaceQR",
+			"name": "GetFaceQR",
 			"request": {
 				"auth": {
 					"type": "apikey",
@@ -305,7 +317,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{host}}/api/v2beta1/qr/cd456136f58c0abb5e80bd0b360d9228",
+					"raw": "{{host}}/api/v2beta1/qr/2c5eccf7e741459e5becbdf8a01602fc",
 					"host": [
 						"{{host}}"
 					],
@@ -313,7 +325,47 @@
 						"api",
 						"v2beta1",
 						"qr",
-						"cd456136f58c0abb5e80bd0b360d9228"
+						"2c5eccf7e741459e5becbdf8a01602fc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetFaceAvatar",
+			"request": {
+				"auth": {
+					"type": "apikey",
+					"apikey": [
+						{
+							"key": "in",
+							"value": "header",
+							"type": "string"
+						},
+						{
+							"key": "value",
+							"value": "{{Session ID}}",
+							"type": "string"
+						},
+						{
+							"key": "key",
+							"value": "{{API Key}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/api/v2beta1/avatar/2c5eccf7e741459e5becbdf8a01602fc",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v2beta1",
+						"avatar",
+						"2c5eccf7e741459e5becbdf8a01602fc"
 					]
 				}
 			},
