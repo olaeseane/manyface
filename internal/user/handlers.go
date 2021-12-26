@@ -41,7 +41,7 @@ func (h *UserHandler) RegisterV1beta1(w http.ResponseWriter, r *http.Request, _ 
 	b, _ := json.Marshal(resp)
 	w.Write(b)
 
-	h.Logger.Infof("The user %v has registered", u.Username)
+	h.Logger.Infof("The user %v has registered", u.ID)
 }
 
 // POST /api/login

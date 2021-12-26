@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: manyface
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: manyface
@@ -21,6 +21,7 @@ spec:
       - image: docker.io/olaesean/manyface:golang1.17.5
         name: manyface
         command: ["/go/bin/manyface"]
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         resources:

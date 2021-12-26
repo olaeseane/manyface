@@ -6,6 +6,7 @@ import (
 
 	"go.uber.org/zap"
 	"manyface.net/internal/session"
+	"manyface.net/internal/utils"
 )
 
 var (
@@ -25,8 +26,9 @@ func Auth(logger *zap.SugaredLogger, sm *session.SessionManager, next http.Handl
 		sessID := r.Header.Get("session-id")
 		sess, err := sm.Check(sessID)
 		if err != nil {
-			http.Error(w, "Authentication error", http.StatusUnauthorized) // TODO: change to RespJSONError()
-			logger.Errorf("Session %v not found", sessID)
+			// http.Error(w, "Authentication error", http.StatusUnauthorized) // TODO: change to RespJSONError()
+			utils.RespJSONError(w, http.StatusUnauthorized, err, "Authentication error", logger)
+			// logger.Errorf("Session %v not found", sessID)
 			return
 		}
 		ctx := context.WithValue(r.Context(), session.SessKey, sess)
