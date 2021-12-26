@@ -16,7 +16,9 @@ data:
       protocol: http
       host: localhost
       port: 8008
-    db:
-      file: /app/db/data.db
+    data:
+      db: /app/db/data.db
+      blob: /app/db/blob/
     log:
       file: ./server.log
+      
