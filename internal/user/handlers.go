@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/julienschmidt/httprouter"
 	"manyface.net/internal/utils"
 )
 
+/*
 // POST /api/reg
 func (h *UserHandler) RegisterV1beta1(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	body, err := ioutil.ReadAll(r.Body)
@@ -78,6 +80,7 @@ func (h *UserHandler) LoginV1beta1(w http.ResponseWriter, r *http.Request, _ htt
 
 	h.Logger.Infof("The user %v has logged in", u.Username)
 }
+*/
 
 // POST /api/user
 func (h *UserHandler) RegisterV2beta1(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -152,4 +155,37 @@ func (h *UserHandler) LoginV2beta1(w http.ResponseWriter, r *http.Request, _ htt
 	})
 
 	h.Logger.Infof("The user %v has logged in", u.Username)
+}
+
+// GET /api/user
+func (h *UserHandler) LoginV3beta1(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	uid, p, ok := r.BasicAuth()
+	if !ok {
+		utils.RespJSONError(w, http.StatusUnauthorized, nil, "Error parsing basic auth", h.Logger)
+		return
+	}
+	userID, err := strconv.Atoi(uid)
+	if err != nil {
+		utils.RespJSONError(w, http.StatusUnauthorized, nil, "Wrong user id", h.Logger)
+		return
+	}
+
+	if err := h.Repo.LoginV3beta1(int64(userID), p); err != nil {
+		utils.RespJSONError(w, http.StatusInternalServerError, err, "Can't login", h.Logger)
+		return
+	}
+
+	var sessID string
+	if sessID, err = h.SM.Create(int64(userID)); err != nil {
+		utils.RespJSONError(w, http.StatusInternalServerError, err, "Can't create session", h.Logger)
+	}
+
+	utils.RespJSON(w, http.StatusOK, map[string]interface{}{
+		"user": struct {
+			UserID int64  `json:"user_id"`
+			SessID string `json:"sess_id"`
+		}{UserID: int64(userID), SessID: sessID},
+	})
+
+	h.Logger.Infof("The user %v has logged in", userID)
 }

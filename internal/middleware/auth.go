@@ -14,6 +14,7 @@ var (
 		"/api/v1beta1/reg":   struct{}{},
 		"/api/v1beta1/login": struct{}{},
 		"/api/v2beta1/user":  struct{}{},
+		"/api/v3beta1/user":  struct{}{},
 	}
 )
 

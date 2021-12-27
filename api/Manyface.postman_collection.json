@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "5881b282-6027-42d3-8cc1-07bc80dc2100",
-		"name": "ManyfaceV2beta1",
+		"name": "Manyface",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -34,7 +34,7 @@
 			"response": []
 		},
 		{
-			"name": "LoginUser",
+			"name": "LoginUserV2beta1",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
@@ -58,6 +58,52 @@
 					"path": [
 						"api",
 						"v2beta1",
+						"user"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "LoginUserV3beta1",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "8",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "welcome",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 8,\n    \"password\": \"welcome\",\n    \"mnemonic\": [\n        \"barely\",\n        \"belt\",\n        \"another\",\n        \"glide\",\n        \"live\",\n        \"rate\",\n        \"apology\",\n        \"orange\",\n        \"soldier\",\n        \"merge\",\n        \"combine\",\n        \"tomorrow\"\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/api/v3beta1/user",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v3beta1",
 						"user"
 					]
 				}
@@ -229,12 +275,7 @@
 							"value": "{ \"nick\": \"Test Face 1 updated\",       \"purpose\": \"purpose updated\", \"bio\": \"bio updated\",       \"comments\": \"for testing updated\"}",
 							"type": "text"
 						}
-					],
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
+					]
 				},
 				"url": {
 					"raw": "{{host}}/api/v2beta1/face/2c5eccf7e741459e5becbdf8a01602fc",

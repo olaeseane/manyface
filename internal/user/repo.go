@@ -12,6 +12,7 @@ func NewRepo(db *sql.DB) *UserRepo {
 	return &UserRepo{db}
 }
 
+/*
 func (repo *UserRepo) RegisterV1beta1(username, password string) (int64, error) {
 	var userID uint
 	err := repo.db.QueryRow("SELECT user_id FROM userV1beta1 WHERE username = ?", username).Scan(&userID)
@@ -50,6 +51,7 @@ func (repo *UserRepo) LoginV1beta1(username, password string) (int64, error) {
 
 	return int64(userID), nil
 }
+*/
 
 func (repo *UserRepo) RegisterV2beta1(password string) ([]string, int64, error) {
 	salt := utils.RandStringRunes(8)
@@ -94,4 +96,20 @@ func (repo *UserRepo) LoginV2beta1(userID int64, password string, mnemonic []str
 		}
 		return int64(userID), nil
 	}
+}
+
+func (repo *UserRepo) LoginV3beta1(userID int64, password string) error {
+	var dbHashPassword []byte
+	err := repo.db.QueryRow("SELECT password FROM userV2beta1 WHERE user_id = ?", userID).Scan(&dbHashPassword)
+	if err == sql.ErrNoRows || err != nil {
+		return err
+	}
+
+	salt := string(dbHashPassword[0:8])
+	inHashPassword := utils.HashIt(password, salt)
+	if !bytes.Equal(inHashPassword, dbHashPassword) {
+		return errors.New("password mismatched")
+	}
+
+	return nil
 }

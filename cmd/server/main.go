@@ -95,6 +95,7 @@ func main() {
 	*/
 	router.POST("/api/v2beta1/user", userHandler.RegisterV2beta1)
 	router.GET("/api/v2beta1/user", userHandler.LoginV2beta1)
+	router.GET("/api/v3beta1/user", userHandler.LoginV3beta1)
 
 	/*
 		router.POST("/api/v1beta1/face", messengerHandler.CreateFace)
@@ -119,8 +120,8 @@ func main() {
 	logger.Infof("Starting rest api server at :%v", cfg.Rest.Port)
 	fmt.Printf("Starting rest api server at :%v\n", cfg.Rest.Port)
 	// http.ListenAndServe(cfg.Rest.Host+":"+cfg.Rest.Port, mux)
-	http.ListenAndServe("localhost:"+cfg.Rest.Port, mux) // NOTE: remove if deploy into k8s
-	// http.ListenAndServe(":"+cfg.Rest.Port, mux)
+	// http.ListenAndServe("localhost:"+cfg.Rest.Port, mux) // NOTE: remove if deploy into k8s
+	http.ListenAndServe(":"+cfg.Rest.Port, mux)
 	if err != nil {
 		logger.Fatalf("Can't start rest api server at :%v port, %v", cfg.Rest.Port, err)
 		return
