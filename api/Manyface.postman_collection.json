@@ -34,37 +34,6 @@
 			"response": []
 		},
 		{
-			"name": "LoginUserV2beta1",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"method": "GET",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"user_id\": 8,\n    \"password\": \"welcome\",\n    \"mnemonic\": [\n        \"barely\",\n        \"belt\",\n        \"another\",\n        \"glide\",\n        \"live\",\n        \"rate\",\n        \"apology\",\n        \"orange\",\n        \"soldier\",\n        \"merge\",\n        \"combine\",\n        \"tomorrow\"\n    ]\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{host}}/api/v2beta1/user",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"api",
-						"v2beta1",
-						"user"
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "LoginUserV3beta1",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
@@ -75,7 +44,7 @@
 					"basic": [
 						{
 							"key": "username",
-							"value": "8",
+							"value": "TYzARvbdnHnYQ5cBkW9sR",
 							"type": "string"
 						},
 						{
