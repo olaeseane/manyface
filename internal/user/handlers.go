@@ -138,7 +138,7 @@ func (h *UserHandler) LoginV2beta1(w http.ResponseWriter, r *http.Request, _ htt
 		return
 	}
 	if u.ID, err = h.Repo.LoginV2beta1(u.ID, u.Password, u.Mnemonic); err != nil || u.ID == -1 {
-		utils.RespJSONError(w, http.StatusInternalServerError, err, "Can't login", h.Logger)
+		utils.RespJSONError(w, http.StatusUnauthorized, err, "Can't login", h.Logger)
 		return
 	}
 
