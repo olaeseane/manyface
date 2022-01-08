@@ -17,6 +17,8 @@ require (
 )
 
 require (
+	github.com/aidarkhanov/nanoid v1.0.8 // indirect
+	github.com/aidarkhanov/nanoid/v2 v2.0.5 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/btcsuite/btcutil v1.0.2 // indirect
 	github.com/fatih/color v1.13.0 // indirect

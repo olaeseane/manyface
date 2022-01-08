@@ -21,5 +21,5 @@ type SessionManager struct {
 
 type Session struct {
 	ID     string
-	UserID int64
+	UserID string
 }

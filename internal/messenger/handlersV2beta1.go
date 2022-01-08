@@ -5,7 +5,6 @@ import (
 	"image/png"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 
 	"github.com/boombuler/barcode"
 	"github.com/boombuler/barcode/qr"
@@ -65,7 +64,7 @@ func (h *MessengerHandler) GetFacesV2beta1(w http.ResponseWriter, r *http.Reques
 	userID := sess.UserID
 	faces, err := h.Srv.GetFacesByUserV2beta1(userID)
 	if err != nil {
-		utils.RespJSONError(w, http.StatusInternalServerError, err, "Can't get faces for user "+strconv.FormatInt(userID, 10), h.Logger)
+		utils.RespJSONError(w, http.StatusInternalServerError, err, "Can't get faces for user "+userID, h.Logger)
 		return
 	}
 

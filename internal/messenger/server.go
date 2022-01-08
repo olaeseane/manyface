@@ -170,7 +170,7 @@ func (srv *MsgServer) DelFaceByID(faceID string, userID int64) error {
 }
 */
 
-func (srv *MsgServer) CreateConn(userID int64, faceUserID, facePeerID string) ([]*Conn, error) {
+func (srv *MsgServer) CreateConn(userID string, faceUserID, facePeerID string) ([]*Conn, error) {
 	var faceUserName, facePeerName string
 
 	// check if faces are corrrected
@@ -287,7 +287,7 @@ func (srv *MsgServer) CreateConn(userID int64, faceUserID, facePeerID string) ([
 	return createdConns, nil
 }
 
-func (srv *MsgServer) DeleteConn(userID int64, faceUserID, facePeerID string) error {
+func (srv *MsgServer) DeleteConn(userID string, faceUserID, facePeerID string) error {
 	// TODO: add forget room or delete user or something to stop receive message for this pair connections
 
 	var faceUserName, facePeerName string
@@ -322,7 +322,7 @@ func (srv *MsgServer) DeleteConn(userID int64, faceUserID, facePeerID string) er
 	return nil
 }
 
-func (srv *MsgServer) GetConnsByUser(userID int64) ([]*Conn, error) {
+func (srv *MsgServer) GetConnsByUser(userID string) ([]*Conn, error) {
 	rows, err := srv.db.Query("SELECT c.conn_id, c.face_id, c.face_peer_id FROM connection c LEFT JOIN face f ON c.face_id=f.face_id WHERE user_id=?", userID)
 	if err != nil {
 		return nil, err

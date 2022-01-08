@@ -94,7 +94,7 @@ func main() {
 		router.POST("/api/v1beta1/login", userHandler.LoginV1beta1)
 	*/
 	router.POST("/api/v2beta1/user", userHandler.RegisterV2beta1)
-	router.GET("/api/v2beta1/user", userHandler.LoginV2beta1)
+	// router.GET("/api/v2beta1/user", userHandler.LoginV2beta1)
 	router.GET("/api/v3beta1/user", userHandler.LoginV3beta1)
 
 	/*

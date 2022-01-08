@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/aidarkhanov/nanoid"
 	"manyface.net/internal/utils"
 )
 
@@ -53,23 +54,24 @@ func (repo *UserRepo) LoginV1beta1(username, password string) (int64, error) {
 }
 */
 
-func (repo *UserRepo) RegisterV2beta1(password string) ([]string, int64, error) {
+func (repo *UserRepo) RegisterV2beta1(password string) ([]string, string, error) {
 	salt := utils.RandStringRunes(8)
 	hashPassword := utils.HashIt(password, salt)
 	mnemonic, err := utils.MakeMnemonic(repo.db)
 	if err != nil {
-		return nil, -1, err
+		return nil, "", err
 	}
+	userID := nanoid.New()
 	seed := utils.MakeSeed(mnemonic, salt)
-	res, err := repo.db.Exec("INSERT INTO userV2beta1 (seed, password) VALUES (?, ?)", seed, hashPassword)
+	res, err := repo.db.Exec("INSERT INTO userV2beta1 (user_id, seed, password) VALUES (?, ?, ?)", userID, seed, hashPassword)
 	if err != nil {
-		return nil, -1, err
+		return nil, "", err
 	}
 	rowCnt, err := res.RowsAffected()
 	if err != nil || rowCnt != 1 {
-		return nil, -1, err
+		return nil, "", err
 	}
-	userID, err := res.LastInsertId()
+	_, err = res.LastInsertId()
 	return mnemonic, userID, err
 }
 
@@ -98,7 +100,7 @@ func (repo *UserRepo) LoginV2beta1(userID int64, password string, mnemonic []str
 	}
 }
 
-func (repo *UserRepo) LoginV3beta1(userID int64, password string) error {
+func (repo *UserRepo) LoginV3beta1(userID string, password string) error {
 	var dbHashPassword []byte
 	err := repo.db.QueryRow("SELECT password FROM userV2beta1 WHERE user_id = ?", userID).Scan(&dbHashPassword)
 	if err == sql.ErrNoRows || err != nil {

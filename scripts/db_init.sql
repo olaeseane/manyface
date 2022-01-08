@@ -6,32 +6,32 @@ DROP TABLE IF EXISTS faceV2beta1;
 DROP TABLE IF EXISTS session;
 -- DROP TABLE IF EXISTS wordlist;
 PRAGMA foreign_keys = ON;
-CREATE TABLE IF NOT EXISTS userV1beta1 (
-    user_id INTEGER PRIMARY KEY,
-    username TEXT NOT NULL,
-    password BLOB NOT NULL
-);
+-- CREATE TABLE IF NOT EXISTS userV1beta1 (
+--     user_id INTEGER PRIMARY KEY,
+--     username TEXT NOT NULL,
+--     password BLOB NOT NULL
+-- );
 CREATE TABLE IF NOT EXISTS userV2beta1 (
-    user_id INTEGER PRIMARY KEY,
+    user_id TEXT PRIMARY KEY,
     seed TEXT NOT NULL,
     password BLOB NOT NULL
-);
+) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS faceV2beta1 (
     face_id TEXT PRIMARY KEY,
     purpose TEXT NOT NULL,
     nick TEXT NOT NULL,
     bio TEXT,
     comments TEXT,
-    user_id INTEGER NOT NULL,
+    user_id TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user (user_id) ON UPDATE RESTRICT ON DELETE RESTRICT
 ) WITHOUT ROWID;
-CREATE TABLE IF NOT EXISTS face (
-    face_id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    description TEXT,
-    user_id INTEGER NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user (user_id) ON UPDATE RESTRICT ON DELETE RESTRICT
-) WITHOUT ROWID;
+-- CREATE TABLE IF NOT EXISTS face (
+--     face_id TEXT PRIMARY KEY,
+--     name TEXT NOT NULL,
+--     description TEXT,
+--     user_id INTEGER NOT NULL,
+--     FOREIGN KEY (user_id) REFERENCES user (user_id) ON UPDATE RESTRICT ON DELETE RESTRICT
+-- ) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS connection (
     conn_id INTEGER PRIMARY KEY,
     mtrx_user_id TEXT NOT NULL,
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS connection (
 );
 CREATE TABLE IF NOT EXISTS session (
     sess_id TEXT PRIMARY KEY,
-    user_id INTEGER NOT NULL
+    user_id TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS wordlist (word TEXT NOT NULL);
 INSERT INTO userV1beta1 (username, password)

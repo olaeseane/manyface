@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 
 	"github.com/julienschmidt/httprouter"
 	"manyface.net/internal/utils"
@@ -152,7 +151,7 @@ func (h *MessengerHandler) GetConns(w http.ResponseWriter, r *http.Request, _ ht
 	u := sess.UserID
 	conns, err := h.Srv.GetConnsByUser(u)
 	if err != nil {
-		utils.HandleError(w, err, http.StatusInternalServerError, "Can't get connections for user "+strconv.Itoa(int(u)), h.Logger)
+		utils.HandleError(w, err, http.StatusInternalServerError, "Can't get connections for user "+u, h.Logger)
 		return
 	}
 
