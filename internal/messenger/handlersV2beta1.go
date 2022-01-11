@@ -28,7 +28,7 @@ func (h *MessengerHandler) CreateFaceV2beta1(w http.ResponseWriter, r *http.Requ
 		utils.RespJSONError(w, http.StatusBadRequest, err, "Can't unmarshal body json", h.Logger)
 		return
 	}
-	face.ID, err = h.Srv.CreateFaceV2beta1(face.Nick, face.Purpose, face.Bio, face.Comments, face.UserID)
+	face.ID, err = h.Srv.CreateFaceV2beta1(face.Nick, face.Purpose, face.Bio, face.Comments, face.Server, face.UserID)
 	if err != nil || face.ID == "" {
 		utils.RespJSONError(w, http.StatusInternalServerError, err, "Can't create face", h.Logger)
 		return

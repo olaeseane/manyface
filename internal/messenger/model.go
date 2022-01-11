@@ -40,6 +40,7 @@ type Face struct {
 	Purpose  string `json:"purpose" example:"For work"`
 	Bio      string `json:"bio" example:"Some bio"`
 	Comments string `json:"comments" example:"Some comments"`
+	Server   string `json:"server" example:"manyface.net"`
 	UserID   string `json:"user_id" example:"10"`
 }
 

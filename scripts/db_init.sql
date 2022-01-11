@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS connection;
-DROP TABLE IF EXISTS face;
+-- DROP TABLE IF EXISTS face;
 DROP TABLE IF EXISTS userV1beta1;
 DROP TABLE IF EXISTS userV2beta1;
 DROP TABLE IF EXISTS faceV2beta1;
@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS faceV2beta1 (
     nick TEXT NOT NULL,
     bio TEXT,
     comments TEXT,
+    server TEXT,
     user_id TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user (user_id) ON UPDATE RESTRICT ON DELETE RESTRICT
 ) WITHOUT ROWID;
@@ -47,29 +48,29 @@ CREATE TABLE IF NOT EXISTS session (
     sess_id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL
 );
-CREATE TABLE IF NOT EXISTS wordlist (word TEXT NOT NULL);
-INSERT INTO userV1beta1 (username, password)
-VALUES ('user1', 'welcome');
-INSERT INTO userV1beta1 (username, password)
-VALUES ('user2', 'welcome');
-INSERT INTO face (face_id, name, description, user_id)
-VALUES (
-        'ada2da68aace03fa2891efbb9314f2c1',
-        'Willy_Wanka',
-        'for chatting on the internet',
-        1
-    );
-INSERT INTO face (face_id, name, description, user_id)
-VALUES (
-        '32f0df4913547929dd69ed63e7b8cb3a',
-        'Mr._Shaquille_Oatmeal',
-        'my offical login',
-        1
-    );
-INSERT INTO face (face_id, name, description, user_id)
-VALUES (
-        'be585b5d359a7fe4deef8466d940c6d3',
-        'Nameless_Faceless',
-        'bad guy',
-        2
-    );
+-- CREATE TABLE IF NOT EXISTS wordlist (word TEXT NOT NULL);
+-- INSERT INTO userV1beta1 (username, password)
+-- VALUES ('user1', 'welcome');
+-- INSERT INTO userV1beta1 (username, password)
+-- VALUES ('user2', 'welcome');
+-- INSERT INTO face (face_id, name, description, user_id)
+-- VALUES (
+--         'ada2da68aace03fa2891efbb9314f2c1',
+--         'Willy_Wanka',
+--         'for chatting on the internet',
+--         1
+--     );
+-- INSERT INTO face (face_id, name, description, user_id)
+-- VALUES (
+--         '32f0df4913547929dd69ed63e7b8cb3a',
+--         'Mr._Shaquille_Oatmeal',
+--         'my offical login',
+--         1
+--     );
+-- INSERT INTO face (face_id, name, description, user_id)
+-- VALUES (
+--         'be585b5d359a7fe4deef8466d940c6d3',
+--         'Nameless_Faceless',
+--         'bad guy',
+--         2
+--     );

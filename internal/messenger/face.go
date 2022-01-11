@@ -7,10 +7,10 @@ import (
 	"errors"
 )
 
-func (srv *MsgServer) CreateFaceV2beta1(nick, purpose, bio, comments string, userID string) (string, error) {
+func (srv *MsgServer) CreateFaceV2beta1(nick, purpose, bio, comments string, server string, userID string) (string, error) {
 	hash := md5.Sum([]byte(nick + "|" + purpose + "|" + bio + "|" + userID))
 	face_id := hex.EncodeToString(hash[:])
-	res, err := srv.db.Exec("INSERT INTO faceV2beta1 (face_id, nick, purpose, bio, comments, user_id) VALUES (?, ?, ?, ?, ?, ?)", face_id, nick, purpose, bio, comments, userID)
+	res, err := srv.db.Exec("INSERT INTO faceV2beta1 (face_id, nick, purpose, bio, comments, server, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)", face_id, nick, purpose, bio, comments, server, userID)
 	if err != nil {
 		return "", err
 	}
@@ -23,8 +23,8 @@ func (srv *MsgServer) CreateFaceV2beta1(nick, purpose, bio, comments string, use
 
 func (srv *MsgServer) GetFaceByIDV2beta1(faceID string, userID string) (*Face, error) {
 	f := &Face{}
-	err := srv.db.QueryRow("SELECT face_id, nick, purpose, bio, comments, user_id FROM faceV2beta1 WHERE face_id = ? AND user_id = ?", faceID, userID).
-		Scan(&f.ID, &f.Nick, &f.Purpose, &f.Bio, &f.Comments, &f.UserID)
+	err := srv.db.QueryRow("SELECT face_id, nick, purpose, bio, comments, server, user_id FROM faceV2beta1 WHERE face_id = ? AND user_id = ?", faceID, userID).
+		Scan(&f.ID, &f.Nick, &f.Purpose, &f.Bio, &f.Comments, &f.Server, &f.UserID)
 	if err == sql.ErrNoRows || err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (srv *MsgServer) GetFaceByIDV2beta1(faceID string, userID string) (*Face, e
 }
 
 func (srv *MsgServer) GetFacesByUserV2beta1(userID string) ([]*Face, error) {
-	rows, err := srv.db.Query("SELECT face_id, nick, purpose, bio, comments, user_id FROM faceV2beta1 WHERE user_id = ?", userID)
+	rows, err := srv.db.Query("SELECT face_id, nick, purpose, bio, comments, server, user_id FROM faceV2beta1 WHERE user_id = ?", userID)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (srv *MsgServer) GetFacesByUserV2beta1(userID string) ([]*Face, error) {
 	faces := make([]*Face, 0, 5)
 	for rows.Next() {
 		f := &Face{}
-		if err := rows.Scan(&f.ID, &f.Nick, &f.Purpose, &f.Bio, &f.Comments, &f.UserID); err != nil {
+		if err := rows.Scan(&f.ID, &f.Nick, &f.Purpose, &f.Bio, &f.Comments, &f.Server, &f.UserID); err != nil {
 			return nil, err
 		}
 		faces = append(faces, f)
@@ -68,8 +68,8 @@ func (srv *MsgServer) DelFaceByIDV2beta1(faceID string, userID string) error {
 }
 
 func (srv *MsgServer) UpdFaceV2beta1(face *Face) error {
-	res, err := srv.db.Exec("UPDATE faceV2beta1 SET nick =?, purpose = ?, bio = ?, comments = ? WHERE face_id = ? AND user_id = ?",
-		&face.Nick, &face.Purpose, &face.Bio, &face.Comments, &face.ID, &face.UserID)
+	res, err := srv.db.Exec("UPDATE faceV2beta1 SET nick =?, purpose = ?, bio = ?, comments = ?, server = ? WHERE face_id = ? AND user_id = ?",
+		&face.Nick, &face.Purpose, &face.Bio, &face.Comments, &face.Server, &face.ID, &face.UserID)
 	if err != nil {
 		return err
 	}
