@@ -13,7 +13,7 @@ import (
 )
 
 // POST /api/face
-func (h *MessengerHandler) CreateFaceV2beta1(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *MessengerHandler) CreateFace(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	sess, _ := h.SM.GetFromCtx(r.Context())
 
 	body, err := ioutil.ReadAll(r.Body)
@@ -28,7 +28,7 @@ func (h *MessengerHandler) CreateFaceV2beta1(w http.ResponseWriter, r *http.Requ
 		utils.RespJSONError(w, http.StatusBadRequest, err, "Can't unmarshal body json", h.Logger)
 		return
 	}
-	face.ID, err = h.Srv.CreateFaceV2beta1(face.Nick, face.Purpose, face.Bio, face.Comments, face.Server, face.UserID)
+	face.ID, err = h.Srv.CreateFace(face.Nick, face.Purpose, face.Bio, face.Comments, face.Server, face.UserID)
 	if err != nil || face.ID == "" {
 		utils.RespJSONError(w, http.StatusInternalServerError, err, "Can't create face", h.Logger)
 		return
@@ -42,9 +42,9 @@ func (h *MessengerHandler) CreateFaceV2beta1(w http.ResponseWriter, r *http.Requ
 }
 
 // GET /api/face/{FACE_ID}
-func (h *MessengerHandler) GetFaceV2beta1(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *MessengerHandler) GetFace(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sess, _ := h.SM.GetFromCtx(r.Context())
-	face, err := h.Srv.GetFaceByIDV2beta1(ps.ByName("FACE_ID"), sess.UserID)
+	face, err := h.Srv.GetFaceByID(ps.ByName("FACE_ID"), sess.UserID)
 	if err != nil {
 		utils.RespJSONError(w, http.StatusInternalServerError, err, "Can't get face", h.Logger)
 		return
@@ -58,11 +58,11 @@ func (h *MessengerHandler) GetFaceV2beta1(w http.ResponseWriter, r *http.Request
 }
 
 // GET /api/faces
-func (h *MessengerHandler) GetFacesV2beta1(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *MessengerHandler) GetFaces(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	sess, _ := h.SM.GetFromCtx(r.Context())
 
 	userID := sess.UserID
-	faces, err := h.Srv.GetFacesByUserV2beta1(userID)
+	faces, err := h.Srv.GetFacesByUser(userID)
 	if err != nil {
 		utils.RespJSONError(w, http.StatusInternalServerError, err, "Can't get faces for user "+userID, h.Logger)
 		return
@@ -76,10 +76,10 @@ func (h *MessengerHandler) GetFacesV2beta1(w http.ResponseWriter, r *http.Reques
 }
 
 // DELETE /api/face/{FACE_ID}
-func (h *MessengerHandler) DelFaceV2beta1(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *MessengerHandler) DelFace(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sess, _ := h.SM.GetFromCtx(r.Context())
 	faceID := ps.ByName("FACE_ID")
-	if err := h.Srv.DelFaceByIDV2beta1(faceID, sess.UserID); err != nil {
+	if err := h.Srv.DelFaceByID(faceID, sess.UserID); err != nil {
 		utils.RespJSONError(w, http.StatusInternalServerError, err, "Can't delete face "+faceID, h.Logger)
 		return
 	}
@@ -88,7 +88,7 @@ func (h *MessengerHandler) DelFaceV2beta1(w http.ResponseWriter, r *http.Request
 	h.Logger.Infof("The face %v was deleted", faceID)
 }
 
-func (h *MessengerHandler) UpdFaceV2beta1(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *MessengerHandler) UpdFace(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// r.ParseMultipartForm(5 * 1024 * 1025) // TODO: save or remove?
 	sess, _ := h.SM.GetFromCtx(r.Context())
 	faceID := ps.ByName("FACE_ID")
@@ -107,7 +107,7 @@ func (h *MessengerHandler) UpdFaceV2beta1(w http.ResponseWriter, r *http.Request
 	}
 	defer avatar.Close()
 
-	err = h.Srv.UpdFaceV2beta1(face)
+	err = h.Srv.UpdFace(face)
 	if err != nil {
 		utils.RespJSONError(w, http.StatusInternalServerError, err, "Can't update face", h.Logger)
 		return
@@ -124,7 +124,7 @@ func (h *MessengerHandler) UpdFaceV2beta1(w http.ResponseWriter, r *http.Request
 	h.Logger.Infof("The face %v - %v was update", face.ID, face.Nick)
 }
 
-func (h *MessengerHandler) GetFaceQRV2beta1(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *MessengerHandler) GetFaceQR(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	faceID := ps.ByName("FACE_ID")
 
 	qrCode, err := qr.Encode(faceID, qr.L, qr.Auto)
@@ -141,7 +141,7 @@ func (h *MessengerHandler) GetFaceQRV2beta1(w http.ResponseWriter, r *http.Reque
 	png.Encode(w, qrCode)
 }
 
-func (h *MessengerHandler) GetFaceAvatarV2beta1(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *MessengerHandler) GetFaceAvatar(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	faceID := ps.ByName("FACE_ID")
 
 	avatar, err := h.BS.Get(faceID + ".png")
@@ -154,3 +154,81 @@ func (h *MessengerHandler) GetFaceAvatarV2beta1(w http.ResponseWriter, r *http.R
 	w.Header().Add("Content-Type", "application/octet-stream")
 	w.Write(avatar)
 }
+
+/*
+// POST /api/face
+func (h *MessengerHandler) CreateFace(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	sess, _ := h.SM.GetFromCtx(r.Context())
+
+	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		utils.HandleError(w, err, http.StatusBadRequest, "Can't read body", h.Logger)
+		return
+	}
+
+	face := &Face{UserID: sess.UserID}
+	if err = json.Unmarshal(body, face); err != nil {
+		utils.HandleError(w, err, http.StatusBadRequest, "Can't unmarshal body json", h.Logger)
+		return
+	}
+	face.ID, err = h.Srv.CreateFace(face.Name, face.Description, face.UserID)
+	if err != nil || face.ID == "" {
+		utils.HandleError(w, err, http.StatusInternalServerError, "Can't create face", h.Logger)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	b, _ := json.Marshal(face)
+	w.Write(b)
+
+	h.Logger.Infof("The face %v - %v was created", face.ID, face.Name)
+}
+
+// GET /api/face/{FACE_ID}
+func (h *MessengerHandler) GetFace(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	face, err := h.Srv.GetFaceByID(ps.ByName("FACE_ID"))
+	if err != nil {
+		utils.HandleError(w, err, http.StatusInternalServerError, "Can't get face", h.Logger)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	b, _ := json.Marshal(face)
+	w.Write(b)
+
+	h.Logger.Infof("Got the face %v ", face.ID)
+}
+
+// DELETE /api/face/{FACE_ID}
+func (h *MessengerHandler) DelFace(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	sess, _ := h.SM.GetFromCtx(r.Context())
+	f := ps.ByName("FACE_ID")
+	if err := h.Srv.DelFaceByID(f, sess.UserID); err != nil {
+		utils.HandleError(w, err, http.StatusInternalServerError, "Can't delete face "+f, h.Logger)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+
+	h.Logger.Infof("The face %v was deleted", f)
+}
+
+// GET /api/faces
+func (h *MessengerHandler) GetFaces(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	sess, _ := h.SM.GetFromCtx(r.Context())
+
+	u := sess.UserID
+	faces, err := h.Srv.GetFacesByUser(u)
+	if err != nil {
+		utils.HandleError(w, err, http.StatusInternalServerError, "Can't get faces for user "+strconv.Itoa(int(u)), h.Logger)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	b, _ := json.Marshal(faces)
+	w.Write(b)
+
+	h.Logger.Infof("Got the faces for user %v ", u)
+}
+*/
