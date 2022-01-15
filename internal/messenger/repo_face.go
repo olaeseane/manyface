@@ -25,8 +25,15 @@ func (srv *Proxy) GetFaceByID(faceID string, userID string) (*Face, error) {
 	f := &Face{}
 	err := srv.db.QueryRow("SELECT face_id, nick, purpose, bio, comments, server, user_id FROM face WHERE face_id = ? AND user_id = ?", faceID, userID).
 		Scan(&f.ID, &f.Nick, &f.Purpose, &f.Bio, &f.Comments, &f.Server, &f.UserID)
-	if err == sql.ErrNoRows || err != nil {
-		return nil, err
+	if err == sql.ErrNoRows {
+		err := srv.db.QueryRow("SELECT face_id, nick, bio FROM face WHERE face_id = ?", faceID).Scan(&f.ID, &f.Nick, &f.Bio)
+		if err == sql.ErrNoRows || err != nil {
+			return nil, err
+		}
+	} else {
+		if err != nil {
+			return nil, err
+		}
 	}
 	return f, nil
 }
