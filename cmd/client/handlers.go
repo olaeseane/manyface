@@ -17,7 +17,7 @@ import (
 
 func ListFaces() {
 	req, err := http.NewRequest(urls["GetFaces"][0], *ws+urls["GetFaces"][1], nil)
-	req.Header.Add("session-id", loginResp.SessID)
+	req.Header.Add("session-id", loginResp.Body.User.SessID)
 	if err != nil {
 		panic(err)
 	}
@@ -30,7 +30,8 @@ func ListFaces() {
 		panic(err)
 	}
 
-	faces := []messenger.Face{}
+	var faces GetFacesResp
+
 	err = json.Unmarshal(respBody, &faces)
 	if err != nil {
 		panic(err)
@@ -39,20 +40,21 @@ func ListFaces() {
 	table := uitable.New()
 	table.MaxColWidth = 80
 	// table.Wrap = true
-	table.AddRow("#", "ID", "Name", "Description")
-	for i, f := range faces {
-		table.AddRow(strconv.Itoa(i+1), yellow(f.ID), cyan(f.Name), f.Description)
+	table.AddRow("#", "ID", "Nick", "Purpose")
+	for i, f := range faces.Body.Faces {
+		table.AddRow(strconv.Itoa(i+1), yellow(f.FaceID), cyan(f.Nick), f.Purpose)
 	}
 	fmt.Println("---")
 	fmt.Println(table)
 	fmt.Println("---")
+
 }
 
-func NewFace(name, descr string) {
-	reqBody := []byte(fmt.Sprintf(`{"name": "%s","description": "%s"}`, name, descr))
+func NewFace(nick, purpose, bio, comments, server string) {
+	reqBody := []byte(fmt.Sprintf(`{"nick": "%s","purpose": "%s","bio": "%s","comments": "%s","server": "%s"}`, nick, purpose, bio, comments, server))
 
 	req, err := http.NewRequest(urls["CreateFace"][0], *ws+urls["CreateFace"][1], bytes.NewBuffer(reqBody))
-	req.Header.Add("session-id", loginResp.SessID)
+	req.Header.Add("session-id", loginResp.Body.User.SessID)
 	if err != nil {
 		panic(err)
 	}
@@ -61,7 +63,7 @@ func NewFace(name, descr string) {
 		panic(err)
 	}
 	fmt.Println("---")
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusCreated {
 		fmt.Println(red("The face wasn't created, status code "), red(strconv.Itoa(resp.StatusCode)))
 	} else {
 		fmt.Println(green("The new face was created"))
@@ -73,7 +75,7 @@ func CreateConn(faceID, peerFaceID string) {
 	reqBody := []byte(fmt.Sprintf(`{"face_user_id": "%s","face_peer_id": "%s"}`, faceID, peerFaceID))
 
 	req, err := http.NewRequest(urls["CreateConn"][0], *ws+urls["CreateConn"][1], bytes.NewBuffer(reqBody))
-	req.Header.Add("session-id", loginResp.SessID)
+	req.Header.Add("session-id", loginResp.Body.User.SessID)
 	if err != nil {
 		panic(err)
 	}
@@ -82,7 +84,7 @@ func CreateConn(faceID, peerFaceID string) {
 		panic(err)
 	}
 	fmt.Println("---")
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusCreated {
 		fmt.Println(red("The connection wasn't created, status code "), red(strconv.Itoa(resp.StatusCode)))
 	} else {
 		fmt.Println(green("The new connection was created"))
@@ -92,7 +94,7 @@ func CreateConn(faceID, peerFaceID string) {
 
 func ListConns() {
 	req, err := http.NewRequest(urls["GetConns"][0], *ws+urls["GetConns"][1], nil)
-	req.Header.Add("session-id", loginResp.SessID)
+	req.Header.Add("session-id", loginResp.Body.User.SessID)
 	if err != nil {
 		panic(err)
 	}
@@ -105,7 +107,7 @@ func ListConns() {
 		panic(err)
 	}
 
-	conns := []messenger.Conn{}
+	var conns GetConnsResp
 	err = json.Unmarshal(respBody, &conns)
 	if err != nil {
 		panic(err)
@@ -115,10 +117,12 @@ func ListConns() {
 	table.MaxColWidth = 80
 	// table.Wrap = true
 	table.AddRow("ID", "My Face", "Face Peer")
-	for _, c := range conns {
-		faceUser, _ := getFace(c.FaceUserID)
-		facePeer, _ := getFace(c.FacePeerID)
-		table.AddRow(cyan(strconv.Itoa(int(c.ID))), cyan(faceUser.Name)+" ("+yellow(c.FaceUserID)+")", cyan(facePeer.Name)+" ("+yellow(c.FacePeerID)+")")
+	for _, c := range conns.Body.Connections {
+		faceUser := getFace(c.FaceUserID).Body.Face
+		// fmt.Println("faceUser=", &faceUser)
+		facePeer := getFace(c.FacePeerID).Body.Face
+		// fmt.Println("facePeer=", facePeer)
+		table.AddRow(cyan(strconv.Itoa(int(c.ConnID))), cyan(faceUser.Nick)+" ("+yellow(c.FaceUserID)+")", cyan(facePeer.Nick)+" ("+yellow(c.FacePeerID)+")")
 	}
 	fmt.Println("---")
 	fmt.Println(table)
@@ -139,7 +143,7 @@ func SendMsg(connID int64, message string) {
 
 func ListenMsg() {
 	req, err := http.NewRequest(urls["GetConns"][0], *ws+urls["GetConns"][1], nil)
-	req.Header.Add("session-id", loginResp.SessID)
+	req.Header.Add("session-id", loginResp.Body.User.SessID)
 	if err != nil {
 		panic(err)
 	}
@@ -152,17 +156,17 @@ func ListenMsg() {
 		panic(err)
 	}
 
-	conns := []messenger.Conn{}
+	var conns GetConnsResp
 	err = json.Unmarshal(respBody, &conns)
 	if err != nil {
 		panic(err)
 	}
 
 	// fmt.Println(conns)
-	for _, c := range conns {
-		go func(c messenger.Conn) {
+	for _, c := range conns.Body.Connections {
+		go func(connID int64, faceUserID, peerFaceID string) {
 			request := messenger.ListenRequest{
-				ConnectionId: c.ID,
+				ConnectionId: connID,
 			}
 			// fmt.Printf("%+v\n", request)
 			stream, err := grpcCli.Listen(context.Background(), &request)
@@ -182,30 +186,32 @@ func ListenMsg() {
 				}
 				table := uitable.New()
 				table.MaxColWidth = 80
-				table.AddRow("From (Face)", "From (ID)", "Message", "Time")
-				f, _ := getFace(msg.Sender)
-				table.AddRow(cyan(f.Name), yellow(msg.Sender), green(msg.Content), time.Unix(msg.Timestamp, 0))
+				table.AddRow("From", "To", "Message", "Time")
+				fS := getFace(msg.Sender).Body.Face
+				fR := getFace(msg.ReceiverFaceId).Body.Face
+				// fmt.Println(f.Nick)
+				table.AddRow(cyan(fS.Nick)+" ("+yellow(msg.Sender)+")", cyan(fR.Nick)+" ("+yellow(msg.ReceiverFaceId)+")", green(msg.Content), time.Unix(msg.Timestamp, 0))
 				fmt.Println(table)
 			}
-		}(c)
+		}(c.ConnID, c.FaceUserID, c.FacePeerID)
 	}
 }
 
-func getFace(faceID string) (*messenger.Face, error) {
+func getFace(faceID string) *GetFaceResp {
 	req, err := http.NewRequest(urls["GetFace"][0], *ws+urls["GetFace"][1]+faceID, nil)
-	req.Header.Add("session-id", loginResp.SessID)
+	req.Header.Add("session-id", loginResp.Body.User.SessID)
 	if err != nil {
-		return nil, err
+		return nil
 	}
 	resp, err := httpCli.Do(req)
 	if err != nil {
-		return nil, err
+		return nil
 	}
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil
 	}
-	var f messenger.Face
+	var f GetFaceResp
 	json.Unmarshal(respBody, &f)
-	return &f, nil
+	return &f
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -25,7 +24,7 @@ import (
 var (
 	ws = flag.String("ws", "http://localhost:8080", "manyface server")
 	gs = flag.String("gs", "127.0.0.1:5300", "manyface server")
-	u  = flag.String("u", "user3", "manyface user")
+	u  = flag.String("u", "l1RaTFQdzwlM2TpOX5xs_", "manyface user")
 	p  = flag.String("p", "welcome", "manyface password")
 
 	httpCli = &http.Client{Timeout: time.Second * 5}
@@ -37,32 +36,36 @@ var (
 
 	helpMessage string = `---
 #Commands
-/nf <name> <description>			- Create a new face with given name and description (name without spaces)
-/faces (f)					- List of my faces
-/conn <my face id> <peer face id>		- Create a connection with given peer
-/conns (cc) 					- List of my connections
-/text <conn id> <message>			- Send a message to given peer from the given face
-/quit (q)					- Quit app
+/nf <nick> <purpose> <bio> <comments> <server>		- Create a new face with given name and description (name without spaces)
+/faces (f)						- List of my faces
+/conn <my face id> <peer face id>			- Create a connection with given peer
+/conns (cc) 						- List of my connections
+/text <conn id> <message>				- Send a message to given peer from the given face
+/quit (q)						- Quit app
 ---
 `
 
 	green, cyan, red, yellow, magenta, blue func(string) string
 
 	urls = map[string][]string{
-		"Register":   {"POST", "/api/reg"},
-		"Login":      {"POST", "/api/login"},
-		"CreateFace": {"POST", "/api/face"},
-		"GetFace":    {"GET", "/api/face/"},    // :FACE_ID
-		"DelFace":    {"DELETE", "/api/face/"}, // :FACE_ID
-		"GetFaces":   {"GET", "/api/faces"},
-		"CreateConn": {"POST", "/api/conn"},
-		"DeleteConn": {"DELETE", "/api/conn"},
-		"GetConns":   {"GET", "/api/conns"},
+		"Register":   {"POST", "/api/v2beta1/user"},
+		"Login":      {"GET", "/api/v2beta1/user"},
+		"CreateFace": {"POST", "/api/v2beta1/face"},
+		"GetFace":    {"GET", "/api/v2beta1/face/"},    // :FACE_ID
+		"DelFace":    {"DELETE", "/api/v2beta1/face/"}, // :FACE_ID
+		"GetFaces":   {"GET", "/api/v2beta1/faces"},
+		"CreateConn": {"POST", "/api/v2beta1/conn"},
+		"DeleteConn": {"DELETE", "/api/v2beta1/conn"},
+		"GetConns":   {"GET", "/api/v2beta1/conns"},
 	}
 )
 
 func main() {
 	flag.Parse()
+
+	if isFlagPassed("-h") || isFlagPassed("--help") || isFlagPassed("-help") {
+		flag.PrintDefaults()
+	}
 	if *u == "" || *p == "" || *ws == "" || *gs == "" {
 		_, _ = fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		flag.PrintDefaults()
@@ -76,8 +79,8 @@ func main() {
 	blue = chalk.Blue.NewStyle().Style
 	magenta = chalk.Magenta.NewStyle().Style
 
-	reqBody := []byte(fmt.Sprintf(`{"username": "%s","password": "%s"}`, *u, *p))
-	req, err := http.NewRequest(urls["Login"][0], *ws+urls["Login"][1], bytes.NewBuffer(reqBody))
+	req, err := http.NewRequest(urls["Login"][0], *ws+urls["Login"][1], nil)
+	req.SetBasicAuth(*u, *p)
 	if err != nil {
 		panic(err)
 	}
@@ -113,8 +116,8 @@ func main() {
 		case "/faces", "/f":
 			ListFaces()
 		case "/nf":
-			params := strings.SplitN(cmd, " ", 3)
-			NewFace(params[1], params[2])
+			params := strings.SplitN(cmd, " ", 6)
+			NewFace(params[1], params[2], params[3], params[4], params[5])
 		case "/conn":
 			CreateConn(params[1], params[2])
 		case "/conns", "/cc":
@@ -129,6 +132,17 @@ func main() {
 			fmt.Println(red("Unknown command, for help type - /help (h)"))
 		}
 	}
+
+}
+
+func isFlagPassed(name string) bool {
+	found := false
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			found = true
+		}
+	})
+	return found
 }
 
 func readCommands(commandCh chan string) {
