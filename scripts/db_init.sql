@@ -1,8 +1,6 @@
 DROP TABLE IF EXISTS connection;
--- DROP TABLE IF EXISTS face;
-DROP TABLE IF EXISTS userV1beta1;
-DROP TABLE IF EXISTS userV2beta1;
-DROP TABLE IF EXISTS faceV2beta1;
+DROP TABLE IF EXISTS user;
+DROP TABLE IF EXISTS face;
 DROP TABLE IF EXISTS session;
 -- DROP TABLE IF EXISTS wordlist;
 PRAGMA foreign_keys = ON;
@@ -11,12 +9,12 @@ PRAGMA foreign_keys = ON;
 --     username TEXT NOT NULL,
 --     password BLOB NOT NULL
 -- );
-CREATE TABLE IF NOT EXISTS userV2beta1 (
+CREATE TABLE IF NOT EXISTS user (
     user_id TEXT PRIMARY KEY,
     seed TEXT NOT NULL,
     password BLOB NOT NULL
 ) WITHOUT ROWID;
-CREATE TABLE IF NOT EXISTS faceV2beta1 (
+CREATE TABLE IF NOT EXISTS face (
     face_id TEXT PRIMARY KEY,
     purpose TEXT NOT NULL,
     nick TEXT NOT NULL,
