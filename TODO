@@ -1,14 +1,12 @@
 
 Todo:
-
-
+  ✔ Change user id from in to uuid @done(22-01-13 16:50)
   ☐ Codogeneration for json
   ✔ Make configuration mgmt using Viper @done(21-12-19 00:24)
   ☐ Better architecture for syncer
   ☐ Security for user password (e.g. via Vault)
   ☐ Use ORM?
   ☐ Gracefull shutdown (Signal.interrupt)
-  ☐ API path refactoring (https://stepik.org/lesson/314473)
   ☐ Change to https rest api
   ☐ Use ssl encryption for grpc call
   ☐ Use autentification for grpc call
@@ -23,8 +21,9 @@ Todo:
   ☐ http over grpc
   ☐ Make readinessProbe/livenessProbe/startupProbe for k8s
   ☐ Add git branches
+  ☐ Delete mtrx users while removing connection
 
   Features
   ✔ Seed, mnemonic generation @done(21-12-23 13:23)
-  ☐ Face refactoring (add purpose, nick, bio, comments, server)
+  ✔ Face refactoring (add purpose, nick, bio, comments, server) @done(21-12-28 17:37)
 

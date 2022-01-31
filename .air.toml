@@ -16,7 +16,7 @@ full_bin = "./bin/main"
 # Watch these filename extensions.
 include_ext = ["go", "yaml"]
 # Ignore these filename extensions or directories.
-exclude_dir = ["scripts", "tmp", "vendor", "db"]
+exclude_dir = ["scripts", "tmp", "vendor", "db", "cmd/client"]
 # Watch these directories if you specified.
 include_dir = ["internal", "cmd", "configs"]
 # Exclude files.

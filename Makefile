@@ -40,11 +40,19 @@ copydb:
 .PHONY: deploy
 deploy:
 	@echo "-- deployment k8s objects into kube"
+	kubectl delete deploy manyface
+	sleep 4
 	# kubectl apply -f deployments/pvc.yaml
 	kubectl apply -f deployments/configmap.yaml
 	kubectl apply -f deployments/pod.yaml
-	sleep 4
+	# sleep 4
 	# kubectl cp ./db/data.db test:/data
 	kubectl apply -f deployments/clusterip.yaml
 	kubectl apply -f deployments/deployment.yaml
 	kubectl get po
+
+.PHONY: start_mtrx
+start_mtrx:
+	cd ../synapse
+	source venv/bin/activate
+	synctl start
