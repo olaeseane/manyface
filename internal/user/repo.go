@@ -13,6 +13,43 @@ func NewRepo(db *sql.DB) *UserRepo {
 	return &UserRepo{db}
 }
 
+func (repo *UserRepo) Register(password string) ([]string, string, error) {
+	salt := utils.RandStringRunes(8)
+	hashPassword := utils.HashIt(password, salt)
+	mnemonic, err := utils.MakeMnemonic(repo.db)
+	if err != nil {
+		return nil, "", err
+	}
+	userID := nanoid.New()
+	seed := utils.MakeSeed(mnemonic, salt)
+	res, err := repo.db.Exec("INSERT INTO user (user_id, seed, password) VALUES (?, ?, ?)", userID, seed, hashPassword)
+	if err != nil {
+		return nil, "", err
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil || rowCnt != 1 {
+		return nil, "", err
+	}
+	_, err = res.LastInsertId()
+	return mnemonic, userID, err
+}
+
+func (repo *UserRepo) Login(userID string, password string) error {
+	var dbHashPassword []byte
+	err := repo.db.QueryRow("SELECT password FROM user WHERE user_id = ?", userID).Scan(&dbHashPassword)
+	if err == sql.ErrNoRows || err != nil {
+		return err
+	}
+
+	salt := string(dbHashPassword[0:8])
+	inHashPassword := utils.HashIt(password, salt)
+	if !bytes.Equal(inHashPassword, dbHashPassword) {
+		return errors.New("password mismatched")
+	}
+
+	return nil
+}
+
 /*
 func (repo *UserRepo) RegisterV1beta1(username, password string) (int64, error) {
 	var userID uint
@@ -52,28 +89,6 @@ func (repo *UserRepo) LoginV1beta1(username, password string) (int64, error) {
 
 	return int64(userID), nil
 }
-*/
-
-func (repo *UserRepo) RegisterV2beta1(password string) ([]string, string, error) {
-	salt := utils.RandStringRunes(8)
-	hashPassword := utils.HashIt(password, salt)
-	mnemonic, err := utils.MakeMnemonic(repo.db)
-	if err != nil {
-		return nil, "", err
-	}
-	userID := nanoid.New()
-	seed := utils.MakeSeed(mnemonic, salt)
-	res, err := repo.db.Exec("INSERT INTO userV2beta1 (user_id, seed, password) VALUES (?, ?, ?)", userID, seed, hashPassword)
-	if err != nil {
-		return nil, "", err
-	}
-	rowCnt, err := res.RowsAffected()
-	if err != nil || rowCnt != 1 {
-		return nil, "", err
-	}
-	_, err = res.LastInsertId()
-	return mnemonic, userID, err
-}
 
 func (repo *UserRepo) LoginV2beta1(userID int64, password string, mnemonic []string) (int64, error) {
 	var seed, dbHashPassword []byte
@@ -100,18 +115,4 @@ func (repo *UserRepo) LoginV2beta1(userID int64, password string, mnemonic []str
 	}
 }
 
-func (repo *UserRepo) LoginV3beta1(userID string, password string) error {
-	var dbHashPassword []byte
-	err := repo.db.QueryRow("SELECT password FROM userV2beta1 WHERE user_id = ?", userID).Scan(&dbHashPassword)
-	if err == sql.ErrNoRows || err != nil {
-		return err
-	}
-
-	salt := string(dbHashPassword[0:8])
-	inHashPassword := utils.HashIt(password, salt)
-	if !bytes.Equal(inHashPassword, dbHashPassword) {
-		return errors.New("password mismatched")
-	}
-
-	return nil
-}
+*/
