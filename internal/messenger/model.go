@@ -10,7 +10,7 @@ import (
 	"maunium.net/go/mautrix"
 )
 
-type MsgServer struct {
+type Proxy struct {
 	wg         *sync.WaitGroup
 	db         *sql.DB
 	logger     *zap.SugaredLogger
@@ -24,26 +24,26 @@ type EventMessage struct {
 	content   string
 	sender    string
 	roomID    string
+	mtype     string
 	timestamp int64
 }
 
 type MessengerHandler struct {
 	Logger *zap.SugaredLogger
-	Srv    *MsgServer
+	Srv    *Proxy
 	SM     *session.SessionManager
 	BS     *blobstorage.FSStorage
 }
 
 type Face struct {
-	ID       string `json:"face_id" example:"98db6968134c5a069d6a513c3993c8af"`
-	Nick     string `json:"nick" example:"Bob"`
-	Purpose  string `json:"purpose" example:"For work"`
-	Bio      string `json:"bio" example:"Some bio"`
-	Comments string `json:"comments" example:"Some comments"`
-	Server   string `json:"server" example:"manyface.net"`
-	UserID   string `json:"user_id" example:"10"`
+	ID       string `json:"face_id,omitempty" example:"98db6968134c5a069d6a513c3993c8af"`
+	Nick     string `json:"nick,omitempty" example:"Bob"`
+	Purpose  string `json:"purpose,omitempty" example:"For work"`
+	Bio      string `json:"bio,omitempty" example:"Some bio"`
+	Comments string `json:"comments,omitempty" example:"Some comments"`
+	Server   string `json:"server,omitempty" example:"manyface.net"`
+	UserID   string `json:"user_id,omitempty" example:"10"`
 }
-
 type Conn struct {
 	ID              int64  `json:"conn_id,omitempty"`
 	MtrxUserID      string `json:"mtrx_user_id,omitempty"`

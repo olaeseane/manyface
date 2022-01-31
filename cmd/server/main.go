@@ -3,11 +3,14 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
 	"manyface.net/internal/blobstorage"
 	"manyface.net/internal/config"
 	"manyface.net/internal/messenger"
@@ -55,7 +58,7 @@ func main() {
 	sm := session.NewSessionManager(db)
 
 	// MessengerServer
-	srv := messenger.NewServer(db, logger, fmt.Sprintf("%s://%s:%s", cfg.Matrix.Protocol, cfg.Matrix.Host, cfg.Matrix.Port))
+	srv := messenger.NewProxy(db, logger, fmt.Sprintf("%s://%s:%s", cfg.Matrix.Protocol, cfg.Matrix.Host, cfg.Matrix.Port))
 	// go srv.StartSyncers()
 
 	// Handlers
@@ -71,57 +74,45 @@ func main() {
 		BS:     storage,
 	}
 
-	/*
-		// Start grpc server
-		listener, err := net.Listen("tcp", ":"+cfg.Grpc.Port)
-		if err != nil {
-			grpclog.Fatalf("failed to listen: %v", err) // TODO: remove?
-			logger.Fatalf("failed to listen: %v", err)
-		}
-		opts := []grpc.ServerOption{}
-		grpcServer := grpc.NewServer(opts...)
-		messenger.RegisterMessengerServer(grpcServer, srv)
-		logger.Infof("Starting grpc server at :%v", cfg.Grpc.Port)
-		fmt.Printf("Starting grpc server at :%v\n", cfg.Grpc.Port)
-		go grpcServer.Serve(listener)
-	*/
+	// Start grpc server
+	// listener, err := net.Listen("tcp", ":"+cfg.Grpc.Port)
+	listener, err := net.Listen("tcp", "localhost:5300") // NOTE: remove if deploy into k8s
+	if err != nil {
+		grpclog.Fatalf("failed to listen: %v", err) // TODO: remove?
+		logger.Fatalf("failed to listen: %v", err)
+	}
+	opts := []grpc.ServerOption{}
+	grpcServer := grpc.NewServer(opts...)
+	messenger.RegisterMessengerServer(grpcServer, srv)
+	logger.Infof("Starting grpc server at :%v", cfg.Grpc.Port)
+	fmt.Printf("Starting grpc server at :%v\n", cfg.Grpc.Port)
+	go grpcServer.Serve(listener)
 
 	// Routes and middleware
 	router := httprouter.New()
 
-	/*
-		router.POST("/api/v1beta1/reg", userHandler.RegisterV1beta1)
-		router.POST("/api/v1beta1/login", userHandler.LoginV1beta1)
-	*/
-	router.POST("/api/v2beta1/user", userHandler.RegisterV2beta1)
-	// router.GET("/api/v2beta1/user", userHandler.LoginV2beta1)
-	router.GET("/api/v3beta1/user", userHandler.LoginV3beta1)
+	router.POST("/api/v2beta1/user", userHandler.Register)
+	router.GET("/api/v2beta1/user", userHandler.Login)
 
-	/*
-		router.POST("/api/v1beta1/face", messengerHandler.CreateFace)
-		router.GET("/api/v1beta1/face/:FACE_ID", messengerHandler.GetFace)
-		router.DELETE("/api/v1beta1/face/:FACE_ID", messengerHandler.DelFace)
-		router.GET("/api/v1beta1/faces", messengerHandler.GetFaces)
-	*/
-	router.POST("/api/v2beta1/face", messengerHandler.CreateFaceV2beta1)
-	router.GET("/api/v2beta1/face/:FACE_ID", messengerHandler.GetFaceV2beta1)
-	router.GET("/api/v2beta1/faces", messengerHandler.GetFacesV2beta1)
-	router.DELETE("/api/v2beta1/face/:FACE_ID", messengerHandler.DelFaceV2beta1)
-	router.PUT("/api/v2beta1/face/:FACE_ID", messengerHandler.UpdFaceV2beta1)
-	router.GET("/api/v2beta1/qr/:FACE_ID", messengerHandler.GetFaceQRV2beta1)
-	router.GET("/api/v2beta1/avatar/:FACE_ID", messengerHandler.GetFaceAvatarV2beta1)
+	router.POST("/api/v2beta1/face", messengerHandler.CreateFace)
+	router.GET("/api/v2beta1/face/:FACE_ID", messengerHandler.GetFace)
+	router.GET("/api/v2beta1/faces", messengerHandler.GetFaces)
+	router.DELETE("/api/v2beta1/face/:FACE_ID", messengerHandler.DelFace)
+	router.PUT("/api/v2beta1/face/:FACE_ID", messengerHandler.UpdFace)
+	router.GET("/api/v2beta1/qr/:FACE_ID", messengerHandler.GetFaceQR)
+	router.GET("/api/v2beta1/avatar/:FACE_ID", messengerHandler.GetFaceAvatar)
 
-	router.POST("/api/v1beta1/conn", messengerHandler.CreateConn)
-	router.DELETE("/api/v1beta1/conn", messengerHandler.DeleteConn)
-	router.GET("/api/v1beta1/conns", messengerHandler.GetConns)
+	router.POST("/api/v2beta1/conn", messengerHandler.CreateConn)
+	router.DELETE("/api/v2beta1/conn", messengerHandler.DeleteConn)
+	router.GET("/api/v2beta1/conns", messengerHandler.GetConns)
 	mux := middleware.Auth(logger, sm, router)
 
 	// Start rest api server
 	logger.Infof("Starting rest api server at :%v", cfg.Rest.Port)
 	fmt.Printf("Starting rest api server at :%v\n", cfg.Rest.Port)
-	// http.ListenAndServe(cfg.Rest.Host+":"+cfg.Rest.Port, mux)
-	// http.ListenAndServe("localhost:"+cfg.Rest.Port, mux) // NOTE: remove if deploy into k8s
-	http.ListenAndServe(":"+cfg.Rest.Port, mux)
+	// http.ListenAndServe(":"+cfg.Rest.Port, mux)
+	http.ListenAndServe("localhost:8080", mux) // NOTE: remove if deploy into k8s
+
 	if err != nil {
 		logger.Fatalf("Can't start rest api server at :%v port, %v", cfg.Rest.Port, err)
 		return

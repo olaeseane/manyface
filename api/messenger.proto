@@ -14,23 +14,23 @@ service Messenger {
 message SendRequest {
   string message = 1;
   int64 connection_id = 2;
-  string sender_face_id = 3;
-  string receiver_face_id = 4;
+  string sender_face_id = 3;    // TODO remove?
+  string receiver_face_id = 4;  // TODO remove?
 }
 
 message SendResponse { bool result = 1; }
 
 message ListenRequest {
   int64 connection_id = 1;
-  string sender_face_id = 2;
-  string receiver_face_id = 3;
+  string sender_face_id = 2;    // TODO remove?
+  string receiver_face_id = 3;  // TODO remove?
 }
 
 message ListenResponse {
   string content = 1;
   int64 connection_id = 2;
-  string sender = 3;
-  string sender_face_id = 4;
-  string receiver_face_id = 5;
+  string sender = 3;             // TODO remove?
+  string sender_face_id = 4;     // TODO remove?
+  string receiver_face_id = 5;   // TODO remove?
   int64 timestamp = 6;
 }
