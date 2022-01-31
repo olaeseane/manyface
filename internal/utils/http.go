@@ -25,8 +25,8 @@ type ServerResponse struct {
 }
 
 func RespJSON(w http.ResponseWriter, status int, body interface{}) {
-	w.WriteHeader(status)
 	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(status)
 	respJSON, _ := json.Marshal(&ServerResponse{
 		Body: body,
 	})
@@ -37,8 +37,8 @@ func RespJSONError(w http.ResponseWriter, status int, err error, text string, lo
 	if err != nil {
 		text = text + " - " + err.Error()
 	}
-	w.WriteHeader(status)
 	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(status)
 	respJSON, _ := json.Marshal(&ServerResponse{
 		Error: text,
 	})
