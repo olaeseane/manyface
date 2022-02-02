@@ -1,0 +1,5 @@
+FROM centosadmin/utils:0.3
+
+COPY data.db /home/
+
+ENTRYPOINT ["sleep", "infinity"]
