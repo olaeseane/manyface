@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"time"
 
+	"google.golang.org/grpc/status"
+
 	"github.com/gosuri/uitable"
 	"manyface.net/internal/messenger"
 )
@@ -136,9 +138,12 @@ func SendMsg(connID int64, message string) {
 	}
 	response, err := grpcCli.Send(context.Background(), request)
 	if err != nil {
-		panic(err)
+		errStatus, ok := status.FromError(err)
+		if ok {
+			fmt.Println(red(fmt.Sprintf("%v, %v", errStatus.Message(), errStatus.Code())))
+		}
 	}
-	fmt.Println(response.Result)
+	fmt.Println(green(fmt.Sprintf("message sent to %v", response.ConnectionId)))
 }
 
 func ListenMsg() {
@@ -162,38 +167,48 @@ func ListenMsg() {
 		panic(err)
 	}
 
-	// fmt.Println(conns)
 	for _, c := range conns.Body.Connections {
-		go func(connID int64, faceUserID, peerFaceID string) {
+		go func(connID int64) {
 			request := messenger.ListenRequest{
 				ConnectionId: connID,
 			}
 			// fmt.Printf("%+v\n", request)
 			stream, err := grpcCli.Listen(context.Background(), &request)
 			if err != nil {
-				// fmt.Println(err)
-				panic(err)
+				errStatus, ok := status.FromError(err)
+				if ok {
+					fmt.Println(red(fmt.Sprintf("%v, %v", errStatus.Message(), errStatus.Code())))
+				}
 			}
 			for {
-				// fmt.Println("starting listening...")
-				msg, err := stream.Recv()
-				// fmt.Println(msg)
-				if err == io.EOF {
-					break
+				select {
+				// case <-globalCtx.Done():
+				// 	fmt.Printf("clean up %v\n", connID)
+				// 	return
+				default:
+					// fmt.Println("starting listening...")
+					msg, err := stream.Recv()
+					// fmt.Println(msg)
+					if err == io.EOF {
+						break
+					}
+					if err != nil {
+						errStatus, ok := status.FromError(err)
+						if ok {
+							fmt.Println(red(fmt.Sprintf("%v, %v", errStatus.Message(), errStatus.Code())))
+						}
+					}
+					table := uitable.New()
+					table.MaxColWidth = 80
+					table.AddRow("From", "To", "Message", "Time")
+					fS := getFace(msg.Sender).Body.Face
+					fR := getFace(msg.ReceiverFaceId).Body.Face
+					// fmt.Println(f.Nick)
+					table.AddRow(cyan(fS.Nick)+" ("+yellow(msg.Sender)+")", cyan(fR.Nick)+" ("+yellow(msg.ReceiverFaceId)+")", green(msg.Message), time.Unix(msg.Timestamp, 0))
+					fmt.Println(table)
 				}
-				if err != nil {
-					panic(err)
-				}
-				table := uitable.New()
-				table.MaxColWidth = 80
-				table.AddRow("From", "To", "Message", "Time")
-				fS := getFace(msg.Sender).Body.Face
-				fR := getFace(msg.ReceiverFaceId).Body.Face
-				// fmt.Println(f.Nick)
-				table.AddRow(cyan(fS.Nick)+" ("+yellow(msg.Sender)+")", cyan(fR.Nick)+" ("+yellow(msg.ReceiverFaceId)+")", green(msg.Content), time.Unix(msg.Timestamp, 0))
-				fmt.Println(table)
 			}
-		}(c.ConnID, c.FaceUserID, c.FacePeerID)
+		}(c.ConnID)
 	}
 }
 
