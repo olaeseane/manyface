@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -22,10 +23,11 @@ import (
 
 // TODO: remove global vars
 var (
-	ws = flag.String("ws", "http://localhost:8080", "manyface server")
-	gs = flag.String("gs", "127.0.0.1:5300", "manyface server")
-	u  = flag.String("u", "l1RaTFQdzwlM2TpOX5xs_", "manyface user")
-	p  = flag.String("p", "welcome", "manyface password")
+	ws = flag.String("ws", "http://localhost:8080", "manyface rest server")
+	gs = flag.String("gs", "127.0.0.1:5300", "manyface grpc server")
+	// u  = flag.String("u", "xaafZ6kkKxX8SvCPFhMHZ", "manyface user") // another user mC6FneCs2VbK26Fkt9IBp - synapse
+	u = flag.String("u", "NfMlpnrGSWknJgh6Wt5uN", "manyface user") // another user RlPqljVc5JGuBKrMSBGUs - conduit
+	p = flag.String("p", "welcome", "manyface password")
 
 	httpCli = &http.Client{Timeout: time.Second * 5}
 
@@ -33,6 +35,8 @@ var (
 	grpcCli  messenger.MessengerClient
 
 	loginResp = LoginResp{}
+
+	globalCtx, globalCancel = context.WithCancel(context.Background())
 
 	helpMessage string = `---
 #Commands
@@ -151,8 +155,9 @@ func readCommands(commandCh chan string) {
 		scanner.Scan()
 		command := scanner.Text()
 		if command == "/quit" || command == "/q" {
-			fmt.Println("Finishing...")
 			close(commandCh)
+			globalCancel()
+			fmt.Println("Finishing...")
 			return
 		}
 		commandCh <- scanner.Text()
