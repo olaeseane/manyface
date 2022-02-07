@@ -7,19 +7,20 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/julienschmidt/httprouter"
+	_ "github.com/mattn/go-sqlite3"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
+	"google.golang.org/grpc/reflection"
+
 	"manyface.net/internal/blobstorage"
 	"manyface.net/internal/config"
 	"manyface.net/internal/messenger"
 	"manyface.net/internal/middleware"
 	"manyface.net/internal/session"
 	"manyface.net/internal/user"
-
-	"github.com/julienschmidt/httprouter"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 // @title Manyface proxy server
@@ -58,8 +59,9 @@ func main() {
 	sm := session.NewSessionManager(db)
 
 	// MessengerServer
-	srv := messenger.NewProxy(db, logger, fmt.Sprintf("%s://%s:%s", cfg.Matrix.Protocol, cfg.Matrix.Host, cfg.Matrix.Port))
-	// go srv.StartSyncers()
+	mtrxServer := fmt.Sprintf("%s://%s:%s", cfg.Matrix.Protocol, cfg.Matrix.Host, cfg.Matrix.Port)
+	srv := messenger.NewProxy(db, logger, mtrxServer)
+	fmt.Printf("Using matrix server at %v\n", mtrxServer)
 
 	// Handlers
 	userHandler := &user.UserHandler{
@@ -83,6 +85,7 @@ func main() {
 	}
 	opts := []grpc.ServerOption{}
 	grpcServer := grpc.NewServer(opts...)
+	reflection.Register(grpcServer) // register reflection service on gRPC server
 	messenger.RegisterMessengerServer(grpcServer, srv)
 	logger.Infof("Starting grpc server at :%v", cfg.Grpc.Port)
 	fmt.Printf("Starting grpc server at :%v\n", cfg.Grpc.Port)
@@ -110,15 +113,13 @@ func main() {
 	// Start rest api server
 	logger.Infof("Starting rest api server at :%v", cfg.Rest.Port)
 	fmt.Printf("Starting rest api server at :%v\n", cfg.Rest.Port)
-	// http.ListenAndServe(":"+cfg.Rest.Port, mux)
-	http.ListenAndServe("localhost:8080", mux) // NOTE: remove if deploy into k8s
+	http.ListenAndServe(":"+cfg.Rest.Port, mux)
+	// http.ListenAndServe("localhost:8080", mux) // NOTE: remove if deploy into k8s
 
 	if err != nil {
 		logger.Fatalf("Can't start rest api server at :%v port, %v", cfg.Rest.Port, err)
 		return
 	}
-
-	// srv.wg.Wait()
 
 }
 
