@@ -11,7 +11,7 @@ grpc:
 matrix:
   protocol: http
   host: localhost
-  port: 8008
+  port: 8009
 
 data:
   # file: ./db/data.db

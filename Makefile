@@ -56,3 +56,7 @@ start_mtrx:
 	cd ../synapse
 	source venv/bin/activate
 	synctl start
+
+.PHONY: start_conduit
+start_conduit:
+docker run -d -p 8009:6167 -v ~/Github/matrix/conduit/.conduit/conduit.toml:/srv/conduit/conduit.toml -v ~/Github/matrix/conduit/.conduit/db:/srv/conduit/.local/share/conduit matrixconduit/matrix-conduit:latest
