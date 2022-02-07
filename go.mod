@@ -17,6 +17,7 @@ require (
 )
 
 require (
+	github.com/Workiva/go-datastructures v1.0.53 // indirect
 	github.com/aidarkhanov/nanoid v1.0.8 // indirect
 	github.com/aidarkhanov/nanoid/v2 v2.0.5 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect

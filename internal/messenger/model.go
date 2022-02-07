@@ -11,13 +11,27 @@ import (
 )
 
 type Proxy struct {
-	wg         *sync.WaitGroup
 	db         *sql.DB
 	logger     *zap.SugaredLogger
 	mtrxServer string
-	conns      map[string]*Conn
+	conns      sync.Map
+	mu         *sync.RWMutex
 
 	UnimplementedMessengerServer
+}
+
+type Conn struct {
+	ID              int64  `json:"conn_id,omitempty"`
+	MtrxUserID      string `json:"mtrx_user_id,omitempty"`
+	MtrxPassword    string `json:"mtrx_password,omitempty"`
+	MtrxAccessToken string `json:"mtrx_access_token,omitempty"`
+	MtrxRoomID      string `json:"mtrx_room_id,omitempty"`
+	MtrxPeerID      string `json:"mtrx_peer_id,omitempty"`
+	FaceUserID      string `json:"face_user_id,omitempty"`
+	FacePeerID      string `json:"face_peer_id,omitempty"`
+	cli             *mautrix.Client
+	dataCh          chan EventMessage
+	quitCh          chan struct{}
 }
 
 type EventMessage struct {
@@ -43,16 +57,4 @@ type Face struct {
 	Comments string `json:"comments,omitempty" example:"Some comments"`
 	Server   string `json:"server,omitempty" example:"manyface.net"`
 	UserID   string `json:"user_id,omitempty" example:"10"`
-}
-type Conn struct {
-	ID              int64  `json:"conn_id,omitempty"`
-	MtrxUserID      string `json:"mtrx_user_id,omitempty"`
-	MtrxPassword    string `json:"mtrx_password,omitempty"`
-	MtrxAccessToken string `json:"mtrx_access_token,omitempty"`
-	MtrxRoomID      string `json:"mtrx_room_id,omitempty"`
-	MtrxPeerID      string `json:"mtrx_peer_id,omitempty"`
-	FaceUserID      string `json:"face_user_id,omitempty"`
-	FacePeerID      string `json:"face_peer_id,omitempty"`
-	cli             *mautrix.Client
-	ch              chan EventMessage
 }

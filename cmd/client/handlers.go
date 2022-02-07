@@ -173,40 +173,39 @@ func ListenMsg() {
 				ConnectionId: connID,
 			}
 			// fmt.Printf("%+v\n", request)
-			stream, err := grpcCli.Listen(context.Background(), &request)
+			stream, err := grpcCli.Listen(globalCtx, &request)
 			if err != nil {
 				errStatus, ok := status.FromError(err)
 				if ok {
 					fmt.Println(red(fmt.Sprintf("%v, %v", errStatus.Message(), errStatus.Code())))
 				}
 			}
+			go func() {
+				<-globalCtx.Done()
+				fmt.Printf("clean up %v\n", connID)
+			}()
 			for {
-				select {
-				// case <-globalCtx.Done():
-				// 	fmt.Printf("clean up %v\n", connID)
-				// 	return
-				default:
-					// fmt.Println("starting listening...")
-					msg, err := stream.Recv()
-					// fmt.Println(msg)
-					if err == io.EOF {
-						break
-					}
-					if err != nil {
-						errStatus, ok := status.FromError(err)
-						if ok {
-							fmt.Println(red(fmt.Sprintf("%v, %v", errStatus.Message(), errStatus.Code())))
-						}
-					}
-					table := uitable.New()
-					table.MaxColWidth = 80
-					table.AddRow("From", "To", "Message", "Time")
-					fS := getFace(msg.Sender).Body.Face
-					fR := getFace(msg.ReceiverFaceId).Body.Face
-					// fmt.Println(f.Nick)
-					table.AddRow(cyan(fS.Nick)+" ("+yellow(msg.Sender)+")", cyan(fR.Nick)+" ("+yellow(msg.ReceiverFaceId)+")", green(msg.Message), time.Unix(msg.Timestamp, 0))
-					fmt.Println(table)
+
+				// fmt.Println("starting listening...")
+				msg, err := stream.Recv()
+				// fmt.Println(msg)
+				if err == io.EOF {
+					return
 				}
+				if err != nil {
+					errStatus, ok := status.FromError(err)
+					if ok {
+						fmt.Println(red(fmt.Sprintf("%v, %v", errStatus.Message(), errStatus.Code())))
+					}
+				}
+				table := uitable.New()
+				table.MaxColWidth = 80
+				table.AddRow("From", "To", "Message", "Time")
+				fS := getFace(msg.SenderFaceId).Body.Face
+				fR := getFace(msg.ReceiverFaceId).Body.Face
+				// fmt.Println(f.Nick)
+				table.AddRow(cyan(fS.Nick)+" ("+yellow(msg.SenderFaceId)+")", cyan(fR.Nick)+" ("+yellow(msg.ReceiverFaceId)+")", green(msg.Message), time.Unix(msg.Timestamp, 0))
+				fmt.Println(table)
 			}
 		}(c.ConnID)
 	}
