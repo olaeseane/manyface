@@ -18,7 +18,7 @@ import (
 )
 
 func ListFaces() {
-	req, err := http.NewRequest(urls["GetFaces"][0], *ws+urls["GetFaces"][1], nil)
+	req, err := http.NewRequest(urls["GetFaces"][0], *fRest+urls["GetFaces"][1], nil)
 	req.Header.Add("session-id", loginResp.Body.User.SessID)
 	if err != nil {
 		panic(err)
@@ -55,7 +55,7 @@ func ListFaces() {
 func NewFace(nick, purpose, bio, comments, server string) {
 	reqBody := []byte(fmt.Sprintf(`{"nick": "%s","purpose": "%s","bio": "%s","comments": "%s","server": "%s"}`, nick, purpose, bio, comments, server))
 
-	req, err := http.NewRequest(urls["CreateFace"][0], *ws+urls["CreateFace"][1], bytes.NewBuffer(reqBody))
+	req, err := http.NewRequest(urls["CreateFace"][0], *fRest+urls["CreateFace"][1], bytes.NewBuffer(reqBody))
 	req.Header.Add("session-id", loginResp.Body.User.SessID)
 	if err != nil {
 		panic(err)
@@ -76,7 +76,7 @@ func NewFace(nick, purpose, bio, comments, server string) {
 func CreateConn(faceID, peerFaceID string) {
 	reqBody := []byte(fmt.Sprintf(`{"face_user_id": "%s","face_peer_id": "%s"}`, faceID, peerFaceID))
 
-	req, err := http.NewRequest(urls["CreateConn"][0], *ws+urls["CreateConn"][1], bytes.NewBuffer(reqBody))
+	req, err := http.NewRequest(urls["CreateConn"][0], *fRest+urls["CreateConn"][1], bytes.NewBuffer(reqBody))
 	req.Header.Add("session-id", loginResp.Body.User.SessID)
 	if err != nil {
 		panic(err)
@@ -95,7 +95,7 @@ func CreateConn(faceID, peerFaceID string) {
 }
 
 func ListConns() {
-	req, err := http.NewRequest(urls["GetConns"][0], *ws+urls["GetConns"][1], nil)
+	req, err := http.NewRequest(urls["GetConns"][0], *fRest+urls["GetConns"][1], nil)
 	req.Header.Add("session-id", loginResp.Body.User.SessID)
 	if err != nil {
 		panic(err)
@@ -147,7 +147,7 @@ func SendMsg(connID int64, message string) {
 }
 
 func ListenMsg() {
-	req, err := http.NewRequest(urls["GetConns"][0], *ws+urls["GetConns"][1], nil)
+	req, err := http.NewRequest(urls["GetConns"][0], *fRest+urls["GetConns"][1], nil)
 	req.Header.Add("session-id", loginResp.Body.User.SessID)
 	if err != nil {
 		panic(err)
@@ -212,7 +212,7 @@ func ListenMsg() {
 }
 
 func getFace(faceID string) *GetFaceResp {
-	req, err := http.NewRequest(urls["GetFace"][0], *ws+urls["GetFace"][1]+faceID, nil)
+	req, err := http.NewRequest(urls["GetFace"][0], *fRest+urls["GetFace"][1]+faceID, nil)
 	req.Header.Add("session-id", loginResp.Body.User.SessID)
 	if err != nil {
 		return nil

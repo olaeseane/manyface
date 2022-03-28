@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -15,19 +17,28 @@ import (
 
 	"github.com/ttacon/chalk"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"manyface.net/internal/messenger"
 )
 
 // const grpcAddr string = "127.0.0.1:5300"
+const caCertPath = "../../configs/ssl/kyma.pem"
+
+// const caCertPath = "../../configs/ssl/server.crt"
 
 // TODO: remove global vars
 var (
-	ws = flag.String("ws", "http://localhost:8080", "manyface rest server")
-	gs = flag.String("gs", "127.0.0.1:5300", "manyface grpc server")
+	// fRest = flag.String("rest", "http://localhost:8080", "manyface rest server")
+	fRest = flag.String("rest", "https://manyface.a131084.kyma.ondemand.com:80", "manyface rest server")
+	// fGrpc = flag.String("grpc", "127.0.0.1:5300", "manyface grpc server")
+	fGrpc = flag.String("grpc", "grpc.a131084.kyma.ondemand.com:5300", "manyface grpc server")
 	// u  = flag.String("u", "xaafZ6kkKxX8SvCPFhMHZ", "manyface user") // another user mC6FneCs2VbK26Fkt9IBp - synapse
-	u = flag.String("u", "NfMlpnrGSWknJgh6Wt5uN", "manyface user") // another user RlPqljVc5JGuBKrMSBGUs - conduit
-	p = flag.String("p", "welcome", "manyface password")
+	// u   = flag.String("u", "NfMlpnrGSWknJgh6Wt5uN", "manyface user") // another user RlPqljVc5JGuBKrMSBGUs - conduit;
+	fUser = flag.String("user", "kVsd6HAQUtGZujPVg-jt8", "manyface user") // kyma user
+	fPwd  = flag.String("pwd", "welcome", "manyface password")
+	// fTls  = flag.Bool("tls", false, "tls connection")
+	fTls = flag.Bool("tls", false, "tls connection")
 
 	httpCli = &http.Client{Timeout: time.Second * 5}
 
@@ -60,7 +71,7 @@ var (
 		"GetFaces":   {"GET", "/api/v2beta1/faces"},
 		"CreateConn": {"POST", "/api/v2beta1/conn"},
 		"DeleteConn": {"DELETE", "/api/v2beta1/conn"},
-		"GetConns":   {"GET", "/api/v2beta1/conns"},
+		"GetConns":   {"GET", "/api/v2beta1/conn"},
 	}
 )
 
@@ -70,11 +81,13 @@ func main() {
 	if isFlagPassed("-h") || isFlagPassed("--help") || isFlagPassed("-help") {
 		flag.PrintDefaults()
 	}
-	if *u == "" || *p == "" || *ws == "" || *gs == "" {
+	if *fUser == "" || *fPwd == "" || *fRest == "" || *fGrpc == "" {
 		_, _ = fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
+
+	fmt.Printf("user - %v\nrest - %v\ngrpc - %v\ntls - %v\n\n", *fUser, *fRest, *fGrpc, *fTls)
 
 	green = chalk.Green.NewStyle().WithBackground(chalk.Black).Style
 	cyan = chalk.Cyan.NewStyle().Style
@@ -83,8 +96,27 @@ func main() {
 	blue = chalk.Blue.NewStyle().Style
 	magenta = chalk.Magenta.NewStyle().Style
 
-	req, err := http.NewRequest(urls["Login"][0], *ws+urls["Login"][1], nil)
-	req.SetBasicAuth(*u, *p)
+	if *fTls {
+		caCert, err := ioutil.ReadFile(caCertPath)
+		if err != nil {
+			panic(err)
+		}
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+		httpCli = &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					// RootCAs:            caCertPool,
+					InsecureSkipVerify: true,
+				},
+			},
+			Timeout: time.Second * 15,
+		}
+	}
+
+	req, err := http.NewRequest(urls["Login"][0], *fRest+urls["Login"][1], nil)
+	fmt.Printf("%+v\n", req)
+	req.SetBasicAuth(*fUser, *fPwd)
 	if err != nil {
 		panic(err)
 	}
@@ -102,12 +134,13 @@ func main() {
 	}
 	json.Unmarshal(respBody, &loginResp)
 
-	fmt.Println("Logging into", cyan(*ws), "and", cyan(*gs), "as", cyan(*u))
+	fmt.Println("Logging into", cyan(*fRest), "and", cyan(*fGrpc), "as", cyan(*fUser))
 	fmt.Println(magenta(helpMessage))
 
-	grpcConn = getGrpcConn(*gs)
+	grpcConn = getGrpcConn(*fGrpc)
 	defer grpcConn.Close()
 	grpcCli = messenger.NewMessengerClient(grpcConn)
+	fmt.Println(grpcConn)
 
 	commandCh := make(chan string)
 	go readCommands(commandCh)
@@ -165,12 +198,24 @@ func readCommands(commandCh chan string) {
 }
 
 func getGrpcConn(grpcAddr string) *grpc.ClientConn {
-	opts := []grpc.DialOption{
-		grpc.WithInsecure(),
+	// opts := []grpc.DialOption{
+	// 	grpc.WithInsecure(),
+	// }
+	opts := grpc.WithInsecure()
+	if *fTls {
+		// caCertFile := "../../configs/ssl/ca.crt"
+		// caCertFile := "../../configs/ssl/kyma.cer"
+		caCertFile := caCertPath
+		creds, sslErr := credentials.NewClientTLSFromFile(caCertFile, "")
+		if sslErr != nil {
+			panic(fmt.Sprintf("Error while loading CA trust certificate: %v", sslErr))
+		}
+		opts = grpc.WithTransportCredentials(creds)
 	}
+
 	grcpConn, err := grpc.Dial(
 		grpcAddr,
-		opts...,
+		opts,
 	)
 	if err != nil {
 		panic(err)
