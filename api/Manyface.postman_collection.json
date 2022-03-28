@@ -12,7 +12,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"password\": \"welcome\"\n}",
+					"raw": "{\n    \"password\": \"\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -34,7 +34,7 @@
 			"response": []
 		},
 		{
-			"name": "LoginUserV3beta1",
+			"name": "LoginUser",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
@@ -44,7 +44,7 @@
 					"basic": [
 						{
 							"key": "username",
-							"value": "TYzARvbdnHnYQ5cBkW9sR",
+							"value": "hmeLMwvfvdv-bjcpEFN7L",
 							"type": "string"
 						},
 						{
@@ -58,7 +58,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"user_id\": 8,\n    \"password\": \"welcome\",\n    \"mnemonic\": [\n        \"barely\",\n        \"belt\",\n        \"another\",\n        \"glide\",\n        \"live\",\n        \"rate\",\n        \"apology\",\n        \"orange\",\n        \"soldier\",\n        \"merge\",\n        \"combine\",\n        \"tomorrow\"\n    ]\n}",
+					"raw": "",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -66,13 +66,13 @@
 					}
 				},
 				"url": {
-					"raw": "{{host}}/api/v3beta1/user",
+					"raw": "{{host}}/api/v2beta1/user",
 					"host": [
 						"{{host}}"
 					],
 					"path": [
 						"api",
-						"v3beta1",
+						"v2beta1",
 						"user"
 					]
 				}
@@ -106,7 +106,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"nick\": \"Test Face 1\",\n    \"purpose\": \"purpose\",\n    \"bio\": \"bio\",\n    \"comments\": \"for testing\"\n}",
+					"raw": "{\n    \"nick\": \"Test Face 2\",\n    \"purpose\": \"purpose\",\n    \"bio\": \"bio\",\n    \"comments\": \"for testing\",\n    \"server\": \"manyface.net\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -376,6 +376,141 @@
 						"v2beta1",
 						"avatar",
 						"2c5eccf7e741459e5becbdf8a01602fc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CreateConnection",
+			"request": {
+				"auth": {
+					"type": "apikey",
+					"apikey": [
+						{
+							"key": "in",
+							"value": "header",
+							"type": "string"
+						},
+						{
+							"key": "value",
+							"value": "{{Session ID}}",
+							"type": "string"
+						},
+						{
+							"key": "key",
+							"value": "{{API Key}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"face_user_id\": \"8615ed9314ddf7e9e873702c549a3a1a\",\n    \"face_peer_id\": \"2ca8928a7952918f0f8cec400dab3ed3\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/api/v2beta1/conn",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v2beta1",
+						"conn"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetConnections",
+			"request": {
+				"auth": {
+					"type": "apikey",
+					"apikey": [
+						{
+							"key": "in",
+							"value": "header",
+							"type": "string"
+						},
+						{
+							"key": "value",
+							"value": "{{Session ID}}",
+							"type": "string"
+						},
+						{
+							"key": "key",
+							"value": "{{API Key}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/api/v2beta1/conn",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v2beta1",
+						"conn"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteConnection",
+			"request": {
+				"auth": {
+					"type": "apikey",
+					"apikey": [
+						{
+							"key": "in",
+							"value": "header",
+							"type": "string"
+						},
+						{
+							"key": "value",
+							"value": "{{Session ID}}",
+							"type": "string"
+						},
+						{
+							"key": "key",
+							"value": "{{API Key}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"face_user_id\": \"7c7dc33ad4e5f1115efc459fee66597c\",\n    \"face_peer_id\": \"7e157209f6edce1b38f3f73c653288ad\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/api/v2beta1/conn",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api",
+						"v2beta1",
+						"conn"
 					]
 				}
 			},
