@@ -14,8 +14,8 @@ data:
       port: 5300
     matrix:
       protocol: http
-      host: localhost
-      port: 8008
+      host: conduit
+      port: 6167
     data:
       db: /app/db/data.db
       blob: /app/db/blob/

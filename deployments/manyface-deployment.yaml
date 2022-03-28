@@ -17,13 +17,18 @@ spec:
       labels:
         app: manyface
     spec:
+      securityContext:
+        fsGroup: 2000
       containers:
       - image: docker.io/olaesean/manyface:golang1.17.5
         name: manyface
         command: ["/go/bin/manyface"]
         imagePullPolicy: Always
         ports:
-        - containerPort: 8080
+        - name: rest
+          containerPort: 8080
+        - name: grpc
+          containerPort: 5300
         resources:
           requests:
             memory: 150Mi
@@ -34,10 +39,10 @@ spec:
         - name: configs
           mountPath: /app/configs
           readOnly: true
-        - name: data
+        - name: db
           mountPath: /app/db
       volumes:
-      - name: data
+      - name: db
         persistentVolumeClaim: 
           claimName: manyface
       - name: configs

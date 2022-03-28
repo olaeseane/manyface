@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  containers:
+  - name: test
+    image: olaesean/testpod
+    command: ['sleep', 'infinity']
+    volumeMounts:
+    - name: manyface-db
+      mountPath: /data/manyface
+    - name: conduit-db
+      mountPath: /data/conduit
+    - name: manyface-configs
+      mountPath: /configs/manyface
+    - name: conduit-configs
+      mountPath: /configs/conduit
+  volumes:
+  - name: manyface-db
+    persistentVolumeClaim:
+      claimName: manyface
+  - name: conduit-db
+    persistentVolumeClaim:
+      claimName: conduit
+  - name: manyface-configs
+    configMap:
+      name: manyface
+  - name: conduit-configs
+    configMap:
+      name: conduit

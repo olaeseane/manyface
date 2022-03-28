@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: conduit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: conduit
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: conduit
+    spec:
+      securityContext:
+        fsGroup: 2000 
+      containers:
+      - image: docker.io/olaesean/matrix-conduit:latest
+        name: conduit
+        command: ["/srv/conduit/conduit"]
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 6167
+        resources:
+          requests:
+            memory: 150Mi
+        volumeMounts:
+        - name: db
+          mountPath: /srv/conduit/db
+          # mountPath: /srv/conduit/.local/share/conduit
+          # subPath: .local/share/conduit
+        - name: config
+          mountPath: /srv/conduit/conduit.toml
+          subPath: conduit.toml
+          readOnly: true
+      volumes:
+      - name: db
+        persistentVolumeClaim: 
+          claimName: conduit
+      - name: config
+        configMap: 
+          name: conduit

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: conduit
+data:
+  conduit.toml: |
+    [global]
+    server_name = "manyface.net"
+    database_path = "/srv/conduit/db"
+    # database_path = "/srv/conduit/.local/share/conduit"
+    # database_path = "/app/conduit"
+    database_backend = "rocksdb"
+    port = 6167
+    max_request_size = 20_000_000 # in bytes
+    allow_registration = true
+    trusted_servers = ["matrix.org"]
+    address = "0.0.0.0" # If Conduit is running in a container, make sure the reverse proxy (ie. Traefik) can reach it.
+    proxy = "none" # more examples can be found at src/database/proxy.rs:6
+    # this is toml from config map

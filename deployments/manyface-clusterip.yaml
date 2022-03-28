@@ -5,9 +5,11 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-  - name: manyface
+  - name: rest
     port: 80
     targetPort: 8080
+  - name: grpc
+    port: 5300
+    protocol: TCP
   selector:
     app: manyface
-  
