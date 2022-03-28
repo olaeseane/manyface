@@ -57,6 +57,14 @@ start_mtrx:
 	source venv/bin/activate
 	synctl start
 
+.PHONY: evans
+evans:
+	evans -p 5300 -r --host <HOST>
+
 .PHONY: start_conduit
 start_conduit:
-docker run -d -p 8009:6167 -v ~/Github/matrix/conduit/.conduit/conduit.toml:/srv/conduit/conduit.toml -v ~/Github/matrix/conduit/.conduit/db:/srv/conduit/.local/share/conduit matrixconduit/matrix-conduit:latest
+	docker run -d -p 8009:6167 -v ~/Github/matrix/conduit/.conduit/conduit.toml:/srv/conduit/conduit.toml -v ~/Github/matrix/conduit/.conduit/db:/srv/conduit/.local/share/conduit matrixconduit/matrix-conduit:latest
+
+.PHONY: cert
+cert:
+	cd ./configs; ./gen.sh; cd ..
