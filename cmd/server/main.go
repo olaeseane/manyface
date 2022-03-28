@@ -77,13 +77,26 @@ func main() {
 	}
 
 	// Start grpc server
-	// listener, err := net.Listen("tcp", ":"+cfg.Grpc.Port)
-	listener, err := net.Listen("tcp", "localhost:5300") // NOTE: remove if deploy into k8s
+	listener, err := net.Listen("tcp", ":"+cfg.Grpc.Port)
+	// listener, err := net.Listen("tcp", "localhost:5300") // NOTE: remove if deploy into k8s
 	if err != nil {
 		grpclog.Fatalf("failed to listen: %v", err) // TODO: remove?
 		logger.Fatalf("failed to listen: %v", err)
 	}
 	opts := []grpc.ServerOption{}
+	/*
+		tls := true
+		if tls {
+			certFile := "./configs/ssl/server.crt"
+			keyFile := "./configs/ssl/server.pem"
+			creds, sslErr := credentials.NewServerTLSFromFile(certFile, keyFile)
+			if sslErr != nil {
+				grpclog.Fatalf("Failed loading certificates: %v", sslErr) // TODO: remove?
+				logger.Fatalf("Failed loading certificates: %v", sslErr)
+			}
+			opts = append(opts, grpc.Creds(creds))
+		}
+	*/
 	grpcServer := grpc.NewServer(opts...)
 	reflection.Register(grpcServer) // register reflection service on gRPC server
 	messenger.RegisterMessengerServer(grpcServer, srv)
@@ -107,7 +120,7 @@ func main() {
 
 	router.POST("/api/v2beta1/conn", messengerHandler.CreateConn)
 	router.DELETE("/api/v2beta1/conn", messengerHandler.DeleteConn)
-	router.GET("/api/v2beta1/conns", messengerHandler.GetConns)
+	router.GET("/api/v2beta1/conn", messengerHandler.GetConns)
 	mux := middleware.Auth(logger, sm, router)
 
 	// Start rest api server
