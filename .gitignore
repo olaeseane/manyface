@@ -82,3 +82,6 @@ cmd/server/server
 /bin
 /db/blob/*
 node_modules
+
+/db/conduit
+/configs/ssl
